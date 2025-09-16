@@ -1,0 +1,979 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Biobags Insights Dashboard</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
+    <style>
+        :root {
+            --bg: #0a0f1f;
+            --panel: #0f162c;
+            --panel-2: #0c1427;
+            --ring: #23314e;
+            --ring-2: #2e4167;
+            --fg: #e8efff;
+            --muted: #93a7cc;
+            --accent: #00e099;
+            --accent-2: #5cb3ff;
+            --warn: #ffd166;
+            --danger: #ff4757;
+            --grid: 16px;
+            --radius: 14px;
+            --shadow: 0 10px 28px rgba(0, 0, 0, .35);
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html,
+        body {
+            height: 100%
+        }
+
+        body {
+            margin: 0;
+            background:
+                radial-gradient(1000px 400px at 15% -10%, #0f1c3a 0%, transparent 60%),
+                radial-gradient(900px 500px at 110% 10%, #0a1a34 0%, transparent 60%),
+                var(--bg);
+            color: var(--fg);
+            font: 14px/1.5 system-ui, Segoe UI, Roboto, Helvetica, Arial;
+        }
+
+        .wrap {
+            max-width: 1440px;
+            margin: 28px auto;
+            padding: 0 16px
+        }
+
+        h1 {
+            margin: 0 0 18px;
+            text-align: center;
+            font-size: 28px;
+            letter-spacing: .3px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent
+        }
+
+        /* Panels & grids */
+        .grid {
+            display: grid;
+            gap: var(--grid);
+            min-width: 0
+        }
+
+        .controls {
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            align-items: end;
+            position: sticky;
+            top: 14px;
+            z-index: 5;
+            padding: 12px;
+            background: linear-gradient(180deg, rgba(15, 22, 44, .95), rgba(15, 22, 44, .75));
+            border: 1px solid var(--ring);
+            backdrop-filter: blur(8px);
+            border-radius: var(--radius)
+        }
+
+        .cards {
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr))
+        }
+
+        .panel {
+            background: linear-gradient(180deg, rgba(15, 22, 44, .95), rgba(15, 22, 44, .88));
+            border: 1px solid rgba(255, 255, 255, .06);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow)
+        }
+
+        .panel.pad {
+            padding: 14px
+        }
+
+        .panel:hover {
+            border-color: rgba(255, 255, 255, .1)
+        }
+
+        .title {
+            font-weight: 700;
+            margin: 0 0 10px;
+            letter-spacing: .2px
+        }
+
+        .muted {
+            color: var(--muted)
+        }
+
+        /* Inputs */
+        label {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+            margin: 0 0 6px
+        }
+
+        select,
+        input {
+            width: 100%;
+            padding: 9px 10px;
+            border: 1px solid #314061;
+            background: #0b1326;
+            color: var(--fg);
+            border-radius: 10px
+        }
+
+        select:focus,
+        input:focus {
+            outline: 0;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0, 224, 153, .18)
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 10px;
+            border: 0;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: #fff
+        }
+
+        .btn.secondary {
+            background: linear-gradient(135deg, #0ea5e9, #0284c7)
+        }
+
+        .btn.ghost {
+            background: transparent;
+            border: 1px solid var(--ring)
+        }
+
+        /* KPIs */
+        .kpi .v {
+            font-size: 22px;
+            font-weight: 800;
+            margin: 6px 0
+        }
+
+        .kpi .subl {
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        .kpi {
+            position: relative;
+            overflow: hidden
+        }
+
+        .kpi:after {
+            content: "";
+            position: absolute;
+            inset: auto -20% -45% -20%;
+            height: 70px;
+            background: radial-gradient(140px 60px at 50% 0, rgba(0, 224, 153, .18), transparent 70%);
+            filter: blur(8px)
+        }
+
+        /* Table */
+        .table {
+            width: 100%;
+            border-collapse: collapse
+        }
+
+        .table thead th {
+            position: sticky;
+            top: 0;
+            background: rgba(12, 20, 38, .98);
+            backdrop-filter: blur(6px);
+            border-bottom: 1px solid #2b3b62;
+            padding: 10px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            text-align: right
+        }
+
+        .table thead th:first-child,
+        .table tbody td:first-child {
+            text-align: left
+        }
+
+        .table tbody td {
+            padding: 10px;
+            border-bottom: 1px solid #1d2a49;
+            text-align: right
+        }
+
+        .table tbody tr:nth-child(odd) {
+            background: rgba(255, 255, 255, .02)
+        }
+
+        .chip {
+            display: inline-block;
+            padding: .22rem .55rem;
+            border: 1px solid var(--ring);
+            border-radius: 999px;
+            font-size: 12px
+        }
+
+        .ok {
+            color: var(--accent)
+        }
+
+        .warn {
+            color: var(--warn)
+        }
+
+        .bad {
+            color: var(--danger)
+        }
+
+        /* Charts */
+        .chart-wrap {
+            height: clamp(240px, 30vw, 320px);
+            display: flex;
+            align-items: center;
+            justify-content: center
+        }
+
+        .chart-wrap.tall {
+            height: clamp(320px, 40vw, 480px)
+        }
+
+        canvas {
+            display: block;
+            width: 100% !important;
+            height: 100% !important;
+            background: #0b1326;
+            border-radius: 10px
+        }
+
+        .notice {
+            padding: 12px;
+            border: 1px solid var(--ring);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, .04)
+        }
+
+        .loading {
+            text-align: center;
+            color: var(--muted);
+            padding: 12px
+        }
+
+        .error {
+            display: none;
+            padding: 12px;
+            border-radius: 12px;
+            background: rgba(255, 71, 87, .12);
+            border: 1px solid rgba(255, 71, 87, .45);
+            color: #fff
+        }
+
+        @media (max-width:920px) {
+            .controls {
+                grid-template-columns: 1fr 1fr
+            }
+
+            .cards {
+                grid-template-columns: repeat(2, 1fr)
+            }
+        }
+
+        @media (max-width:600px) {
+            .controls {
+                grid-template-columns: 1fr
+            }
+
+            .cards {
+                grid-template-columns: 1fr
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+        <h1>Biobags Insights Dashboard</h1>
+
+        <!-- Controls -->
+        <div class="grid controls panel pad">
+            <div>
+                <label>📅 Period</label>
+                <select id="period">
+                    <option>Monthly</option>
+                    <option>Quarterly</option>
+                    <option>Half-Yearly</option>
+                    <option>Yearly</option>
+                </select>
+            </div>
+            <div>
+                <label>📅 Start Date</label>
+                <input type="date" id="startDate" />
+            </div>
+            <div>
+                <label>📅 End Date</label>
+                <input type="date" id="endDate" />
+            </div>
+            <div>
+                <label>📋 Status</label>
+                <select id="status">
+                    <option>All</option>
+                    <option>Open</option>
+                    <option>Closed</option>
+                </select>
+            </div>
+            <div>
+                <label>🚚 Delivered</label>
+                <select id="delivered">
+                    <option>All</option>
+                    <option>Yes</option>
+                    <option>No</option>
+                </select>
+            </div>
+            <div>
+                <label>👤 Focus Client</label>
+                <select id="focusClient">
+                    <option value="">All</option>
+                </select>
+                <input type="hidden" id="search" placeholder="Type to filter" />
+            </div>
+            <div>
+                <label>🔧 Actions</label>
+                <div class="row">
+                    <button class="btn" id="reload">Refresh</button>
+                    <button class="btn secondary" id="download">Download</button>
+                </div>
+            </div>
+            <div>
+                <label>♻️ Filters</label>
+                <button class="btn ghost" id="reset">Reset</button>
+            </div>
+        </div>
+
+        <div id="loading" class="loading" style="display:none">Loading data…</div>
+        <div id="error" class="error"></div>
+
+        <!-- KPI cards -->
+        <div class="grid cards" style="margin-top:16px">
+            <div class="panel pad kpi">
+                <div class="title">📦 Orders</div>
+                <div class="v" id="k_orders">-</div>
+                <div class="subl">count</div>
+            </div>
+            <div class="panel pad kpi">
+                <div class="title">⚖️ Quantity</div>
+                <div class="v" id="k_qty">-</div>
+                <div class="subl">kg</div>
+            </div>
+            <div class="panel pad kpi">
+                <div class="title">💰 Revenue</div>
+                <div class="v" id="k_rev">-</div>
+                <div class="subl">₹</div>
+            </div>
+            <div class="panel pad kpi">
+                <div class="title">💸 Cost</div>
+                <div class="v" id="k_cost">-</div>
+                <div class="subl">₹</div>
+            </div>
+            <div class="panel pad kpi">
+                <div class="title">📈 Profit</div>
+                <div class="v" id="k_profit">-</div>
+                <div class="subl">₹ total</div>
+            </div>
+            <div class="panel pad kpi">
+                <div class="title">📊 Avg Price</div>
+                <div class="v" id="k_avgsp">-</div>
+                <div class="subl">₹/kg (sell | cost | margin%)</div>
+            </div>
+            <div class="panel pad kpi">
+                <div class="title">⏳ Credit</div>
+                <div class="v" id="k_pending">-</div>
+                <div class="subl">₹ receivables</div>
+            </div>
+            <div class="panel pad kpi">
+                <div class="title">🧾 Open vs Closed</div>
+                <div class="v"><span id="k_open">-</span> / <span id="k_closed">-</span></div>
+                <div class="subl">open / closed</div>
+            </div>
+        </div>
+
+        <!-- Time summary table -->
+        <div class="panel" style="margin-top:16px">
+            <div class="pad">
+                <div class="title">📊 Period Summary</div>
+            </div>
+            <div style="overflow:auto;border-top:1px solid var(--ring)">
+                <table class="table" id="t_period">
+                    <thead></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Revenue/Profit trends -->
+        <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(340px,1fr));margin-top:16px">
+            <div class="panel pad">
+                <div class="title">📉 Revenue & Cost Over Time</div>
+                <div class="chart-wrap"><canvas id="c_rev_cost"></canvas></div>
+            </div>
+            <div class="panel pad">
+                <div class="title">📈 Profit Over Time</div>
+                <div class="chart-wrap"><canvas id="c_profit"></canvas></div>
+            </div>
+        </div>
+
+        <!-- Core distributions -->
+        <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(340px,1fr));margin-top:16px">
+            <div class="panel pad">
+                <div class="title">🏭 Manufacturer-wise Quantity (kg)</div>
+                <div class="chart-wrap"><canvas id="c_by_manu"></canvas></div>
+            </div>
+            <div class="panel pad">
+                <div class="title">🎨 Type-wise Quantity (kg)</div>
+                <div class="chart-wrap"><canvas id="c_by_type"></canvas></div>
+            </div>
+        </div>
+        <div class="panel pad" style="margin-top:16px">
+            <div class="title">📏 Size-wise Quantity (kg)</div>
+            <div class="chart-wrap tall"><canvas id="c_by_size"></canvas></div>
+        </div>
+
+        <!-- Status & Delivery -->
+        <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(340px,1fr));margin-top:16px">
+            <div class="panel pad">
+                <div class="title">📋 Status Distribution</div>
+                <div class="chart-wrap"><canvas id="c_status"></canvas></div>
+            </div>
+            <div class="panel pad">
+                <div class="title">🚚 Delivery Status</div>
+                <div class="chart-wrap"><canvas id="c_delivery"></canvas></div>
+            </div>
+        </div>
+
+        <!-- Client Intelligence -->
+        <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(360px,1fr));margin-top:16px">
+            <div class="panel pad">
+                <div class="title">👑 Top Clients by Quantity (kg)</div>
+                <div class="chart-wrap"><canvas id="c_client_top"></canvas></div>
+            </div>
+            <div class="panel pad">
+                <div class="title">🧭 Focus Client → Size (kg)</div>
+                <div class="chart-wrap"><canvas id="c_client_size"></canvas></div>
+            </div>
+            <div class="panel pad">
+                <div class="title">🎨 Focus Client → Type (kg)</div>
+                <div class="chart-wrap"><canvas id="c_client_type"></canvas></div>
+            </div>
+            <div class="panel pad">
+                <div class="title">🏭 Size → Manufacturer Mix (Top Sizes)</div>
+                <div class="chart-wrap"><canvas id="c_size_manu"></canvas></div>
+            </div>
+        </div>
+
+        <!-- Client Insights (improved logic) -->
+        <div class="panel" style="margin-top:16px">
+            <div class="pad">
+                <div class="title">🧑‍🤝‍🧑 Client Insights (behavior, pricing, preferences & risk)</div>
+            </div>
+            <div style="overflow:auto;border-top:1px solid var(--ring)">
+                <table class="table" id="t_clients">
+                    <thead>
+                        <tr>
+                            <th>Client</th>
+                            <th>Total Qty</th>
+                            <th>Revenue</th>
+                            <th>Profit</th>
+                            <th>Avg ₹/kg</th>
+                            <th>Top Size</th>
+                            <th>Top Type</th>
+                            <th>Realized ₹/kg (Top)</th>
+                            <th>Configured ₹/kg (Top)</th>
+                            <th>Pref. Manufacturers</th>
+                            <th>Top Actual Manufacturer</th>
+                            <th>Pref. Adherence</th>
+                            <th>Last Order</th>
+                            <th>Churn Risk</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Size–Type to Manufacturer Mapping (logical) -->
+        <div class="panel" style="margin-top:16px">
+            <div class="pad">
+                <div class="title">🔗 Size–Type → Manufacturer (Top by history, costs & preferences)</div>
+                <div class="notice muted">For each Size–Type: shows historical top manufacturer by qty, union of client
+                    preferences, recommended manufacturer (lowest cost among preferred if present, else global lowest
+                    cost), and the cost used.</div>
+            </div>
+            <div style="overflow:auto;border-top:1px solid var(--ring)">
+                <table class="table" id="t_mapping">
+                    <thead>
+                        <tr>
+                            <th>Size</th>
+                            <th>Type</th>
+                            <th>Top Manufacturer (history)</th>
+                            <th>Preferred Manufacturers</th>
+                            <th>Recommended Manufacturer</th>
+                            <th>Cost Used</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Libs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js" crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    <script>
+        // ====== Config ======
+        const SHEET_ID = '1PvY4f3pPiSG9DrQjIO6kMQVPxB8NK0ZnMxwKOnQZi-0';
+        const GID_ORDERS = '1523346431';
+        const GID_CLIENTS = '1503466344';
+        const GID_MANU = '159599109';
+        const URL = gid => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
+
+        // Orders headers (normalize once to be robust)
+        const H = { orderID: 'Order ID', date: 'Date', client: 'Client', size: 'Size', type: 'Type', qty: 'Qty (kg)', manufacturer: 'Manufacturer', delivered: 'Delivered', deliveryDate: 'Delivery Date', costPrice: 'Cost Price (₹)', sellPrice: 'Sell Price (₹)', profit: 'Profit (₹)', needToPay: 'Need to Pay (₹)', paid: 'Paid', received: 'Received', got: 'Got (₹)', pending: 'Pending (₹)', paymentMode: 'Mode of Payment', status: 'Status', notes: 'Notes/Remarks' };
+        const HC = { client: 'Client', size: 'Size', type: 'Type', sellRate: 'Selling Price (₹/kg)', pref: 'Preferred Manufacturer (s)' };
+        const HM = { manu: 'Manufacturer', size: 'Size', type: 'Type', cost: 'Cost Price (₹/kg)' };
+
+        // ====== State ======
+        let ORDERS = []; let CLIENTS = []; let MANU = [];
+        const charts = {};
+
+        // ====== Utils ======
+        const INR = new Intl.NumberFormat('en-IN');
+        const toNum = x => { if (x === null || x === undefined) return 0; const n = parseFloat(String(x).replace(/[,₹\s]/g, '').trim()); return isFinite(n) ? n : 0 };
+        const parseDate = d => {
+            if (!d) return null; const t = new Date(d); if (!isNaN(+t)) return t; // handle dd-MMM-yyyy
+            // try dd-MMM-yyyy style (e.g., 16-Sep-2025)
+            const m = /^([0-9]{1,2})-([A-Za-z]{3})-([0-9]{4})$/.exec(String(d).trim());
+            if (m) { const month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].indexOf(m[2]); if (month >= 0) { return new Date(+m[3], month, +m[1]) } }
+            return null
+        };
+        const fmtMoney = n => '₹' + INR.format(Math.round(n));
+        const fmtQty = n => INR.format(Math.round(n * 100) / 100);
+        const ym = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        const qtr = d => `${d.getFullYear()} Q${Math.floor(d.getMonth() / 3) + 1}`;
+        const half = d => `${d.getFullYear()} H${d.getMonth() < 6 ? 1 : 2}`;
+        const yr = d => String(d.getFullYear());
+        const keyST = (size, type) => `${(size || '').trim()}|||${(type || '').trim()}`;
+
+        const show = (id, display) => document.getElementById(id).style.display = display ? 'block' : 'none';
+        const setError = msg => { const e = document.getElementById('error'); if (msg) { e.textContent = msg; e.style.display = 'block' } else e.style.display = 'none' };
+
+        // CSV fetch
+        async function fetchCSV(gid) { const res = await fetch(URL(gid), { cache: 'no-store' }); if (!res.ok) throw new Error(`${gid}: ${res.status} ${res.statusText}`); return res.text(); }
+
+        async function loadAll() {
+            show('loading', true); setError(null);
+            const [o, c, m] = await Promise.all([fetchCSV(GID_ORDERS), fetchCSV(GID_CLIENTS), fetchCSV(GID_MANU)]);
+            const pO = Papa.parse(o, { header: true });
+            ORDERS = pO.data.filter(r => r[H.date]).map(r => {
+                const d = parseDate(r[H.date]); const qty = toNum(r[H.qty]); const sp = toNum(r[H.sellPrice]); const cp = toNum(r[H.costPrice]);
+                const deliveredStr = (r[H.delivered] || '').toString().trim().toLowerCase();
+                const isDelivered = deliveredStr.startsWith('y');
+                const status = (r[H.status] || '').toString().trim();
+                return {
+                    orderID: r[H.orderID] || '', date: d, client: r[H.client] || '', size: r[H.size] || '', type: r[H.type] || '', qty,
+                    manufacturer: r[H.manufacturer] || '', delivered: isDelivered, deliveryDate: parseDate(r[H.deliveryDate]),
+                    costPrice: cp, sellPrice: sp, revenue: qty * sp, cost: qty * cp, profit: toNum(r[H.profit]) || (qty * (sp - cp)),
+                    needToPay: toNum(r[H.needToPay]), paid: (r[H.paid] || '').trim(), received: (r[H.received] || '').trim(),
+                    got: toNum(r[H.got]), pending: toNum(r[H.pending]), paymentMode: (r[H.paymentMode] || '').trim(),
+                    status, notes: (r[H.notes] || '').trim()
+                }
+            }).filter(r => r.date);
+
+            const pC = Papa.parse(c, { header: true });
+            CLIENTS = pC.data.filter(r => (r[HC.client] || '').trim()).map(r => ({
+                client: (r[HC.client] || '').trim(), size: (r[HC.size] || '').trim(), type: (r[HC.type] || '').trim(),
+                sellRate: toNum(r[HC.sellRate]), pref: (r[HC.pref] || '').replace(/\s+/g, ' ').trim()
+            }));
+
+            const pM = Papa.parse(m, { header: true });
+            MANU = pM.data.filter(r => (r[HM.manu] || '').trim()).map(r => ({
+                manu: (r[HM.manu] || '').trim(), size: (r[HM.size] || '').trim(), type: (r[HM.type] || '').trim(), cost: toNum(r[HM.cost])
+            }));
+
+            // Focus client dropdown
+            const sel = document.getElementById('focusClient');
+            const clients = [...new Set(ORDERS.map(r => r.client).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+            sel.innerHTML = '<option value="">All</option>' + clients.map(c => `<option>${c}</option>`).join('');
+
+            show('loading', false);
+        }
+
+        // ====== Filters ======
+        function applyFilters(rows) {
+            const s = document.getElementById('status').value;
+            const d = document.getElementById('delivered').value;
+            const fc = document.getElementById('focusClient').value;
+            const sd = document.getElementById('startDate').value ? new Date(document.getElementById('startDate').value) : null;
+            const ed = document.getElementById('endDate').value ? new Date(document.getElementById('endDate').value) : null;
+            const q = (document.getElementById('search').value || '').toLowerCase().trim();
+
+            return rows.filter(r => {
+                if (!r.date) return false;
+                if (sd && r.date < sd) return false;
+                if (ed && r.date > ed) return false;
+                if (fc && r.client !== fc) return false;
+                if (s !== 'All' && (r.status || '').toLowerCase() !== s.toLowerCase()) return false;
+                if (d !== 'All') {
+                    if (d === 'Yes' && !r.delivered) return false;
+                    if (d === 'No' && r.delivered) return false;
+                }
+                if (q) {
+                    const hay = `${r.client}|${r.size}|${r.type}|${r.manufacturer}`.toLowerCase();
+                    if (!hay.includes(q)) return false;
+                }
+                return true;
+            });
+        }
+
+        function groupByPeriod(rows) {
+            const keyFn = { 'Monthly': ym, 'Quarterly': qtr, 'Half-Yearly': half, 'Yearly': yr }[document.getElementById('period').value];
+            const m = new Map();
+            for (const r of rows) {
+                const k = keyFn(r.date);
+                if (!m.has(k)) m.set(k, { period: k, orders: 0, open: 0, closed: 0, qty: 0, revenue: 0, cost: 0, profit: 0, got: 0, pending: 0 });
+                const a = m.get(k);
+                a.orders++; a.qty += r.qty; a.revenue += r.revenue; a.cost += r.cost; a.profit += r.profit; a.got += r.got; a.pending += r.pending;
+                if ((r.status || '').toLowerCase() === 'open') a.open++; else if ((r.status || '').toLowerCase() === 'closed') a.closed++;
+            }
+            return [...m.values()].sort((x, y) => x.period.localeCompare(y.period));
+        }
+
+        const sumQty = (rows, key) => {
+            const m = new Map();
+            for (const r of rows) { const k = (r[key] || 'Unknown'); m.set(k, (m.get(k) || 0) + r.qty) }
+            return [...m.entries()].sort((a, b) => b[1] - a[1]);
+        }
+        const countBy = (rows, key) => {
+            const m = new Map();
+            for (const r of rows) { const k = (r[key] || 'Unknown'); m.set(k, (m.get(k) || 0) + 1) }
+            return [...m.entries()].sort((a, b) => b[1] - a[1]);
+        }
+
+        // Lookups
+        function buildClientLookups() {
+            const rateMap = new Map(); // client|size|||type -> sellRate
+            const prefMap = new Map(); // client -> Set(manufacturer)
+            for (const r of CLIENTS) {
+                rateMap.set(`${r.client}|${keyST(r.size, r.type)}`, r.sellRate || 0);
+                const s = prefMap.get(r.client) || new Set();
+                r.pref.split(',').map(x => x.trim()).filter(Boolean).forEach(p => s.add(p));
+                prefMap.set(r.client, s);
+            }
+            return { rateMap, prefMap }
+        }
+
+        function buildManuCost() {
+            // maps: st -> Map(manu -> cost), and also min cost per st
+            const costMap = new Map();
+            const minCost = new Map();
+            for (const r of MANU) {
+                const st = keyST(r.size, r.type);
+                const m = costMap.get(st) || new Map();
+                m.set(r.manu, r.cost || 0);
+                costMap.set(st, m);
+                const cur = minCost.get(st); const v = r.cost || Infinity;
+                if (cur === undefined || v < cur) minCost.set(st, v);
+            }
+            return { costMap, minCost }
+        }
+
+        // ====== Rendering ======
+        function renderKPIs(rows) {
+            const orders = rows.length,
+                qty = rows.reduce((s, r) => s + r.qty, 0),
+                rev = rows.reduce((s, r) => s + r.revenue, 0),
+                cost = rows.reduce((s, r) => s + r.cost, 0),
+                profit = rows.reduce((s, r) => s + r.profit, 0),
+                pending = rows.reduce((s, r) => s + r.pending, 0),
+                open = rows.filter(r => (r.status || '').toLowerCase() === 'open').length,
+                closed = rows.filter(r => (r.status || '').toLowerCase() === 'closed').length;
+            const avgSell = qty ? (rev / qty) : 0; const avgCost = qty ? (cost / qty) : 0; const marginPct = avgSell ? ((avgSell - avgCost) / avgSell * 100) : 0;
+            document.getElementById('k_orders').textContent = INR.format(orders);
+            document.getElementById('k_qty').textContent = fmtQty(qty);
+            document.getElementById('k_rev').textContent = fmtMoney(rev);
+            document.getElementById('k_cost').textContent = fmtMoney(cost);
+            document.getElementById('k_profit').textContent = fmtMoney(profit);
+            document.getElementById('k_pending').textContent = fmtMoney(pending);
+            document.getElementById('k_open').textContent = INR.format(open);
+            document.getElementById('k_closed').textContent = INR.format(closed);
+            document.getElementById('k_avgsp').textContent = `${fmtMoney(avgSell)} | ${fmtMoney(avgCost)} | ${marginPct ? marginPct.toFixed(1) : '0.0'}%`;
+        }
+
+        function renderPeriodTable(groups) {
+            const thead = document.querySelector('#t_period thead'); const tbody = document.querySelector('#t_period tbody');
+            thead.innerHTML = `<tr>
+        <th>Period</th><th>Orders</th><th>Open</th><th>Closed</th>
+        <th>Qty (kg)</th><th>Revenue (₹)</th><th>Cost (₹)</th><th>Profit (₹)</th>
+        <th>Avg ₹/kg</th><th>Got (₹)</th><th>Credit (₹)</th>
+      </tr>`
+            tbody.innerHTML = groups.map(g => {
+                const avg = g.qty ? (g.revenue / g.qty) : 0;
+                return `<tr>
+          <td><strong>${g.period}</strong></td>
+          <td>${INR.format(g.orders)}</td>
+          <td><span class="chip warn">${INR.format(g.open)}</span></td>
+          <td><span class="chip ok">${INR.format(g.closed)}</span></td>
+          <td>${fmtQty(g.qty)}</td>
+          <td>${fmtMoney(g.revenue)}</td>
+          <td>${fmtMoney(g.cost)}</td>
+          <td>${fmtMoney(g.profit)}</td>
+          <td>${fmtMoney(avg)}</td>
+          <td>${fmtMoney(g.got)}</td>
+          <td>${fmtMoney(g.pending)}</td>
+        </tr>`
+            }).join('');
+        }
+
+        function destroyCharts() { Object.values(charts).forEach(c => { try { c.destroy() } catch (_) { } }); for (const k of Object.keys(charts)) delete charts[k]; }
+
+        function commonBar() {
+            const gridColor = '#2a3a5d', tickColor = '#9fb0d0';
+            return {
+                responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
+                plugins: { legend: { display: false }, tooltip: { backgroundColor: '#0b1020', borderColor: '#223354', borderWidth: 1 } },
+                scales: {
+                    x: { ticks: { color: tickColor, autoSkip: true, maxRotation: 45 }, grid: { color: gridColor, drawOnChartArea: false } },
+                    y: { ticks: { color: tickColor, callback: v => INR.format(v) }, grid: { color: gridColor } }
+                }
+            }
+        }
+
+        function renderTrendCharts(groups) {
+            const labels = groups.map(g => g.period);
+            const rev = groups.map(g => Math.round(g.revenue));
+            const cost = groups.map(g => Math.round(g.cost));
+            const profit = groups.map(g => Math.round(g.profit));
+            destroyCharts();
+            charts.revCost = new Chart(document.getElementById('c_rev_cost'), {
+                type: 'line', data: {
+                    labels, datasets: [
+                        { label: 'Revenue', data: rev }, { label: 'Cost', data: cost }
+                    ]
+                }, options: {
+                    responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#9fb0d0' } }, tooltip: { backgroundColor: '#0b1020', borderColor: '#223354', borderWidth: 1 } },
+                    scales: { x: { ticks: { color: '#9fb0d0' } }, y: { ticks: { color: '#9fb0d0', callback: v => INR.format(v) } } }
+                }
+            });
+            charts.profit = new Chart(document.getElementById('c_profit'), {
+                type: 'bar', data: { labels, datasets: [{ label: 'Profit', data: profit }] }, options: commonBar()
+            });
+        }
+
+        function renderDistributions(rows) {
+            const byManu = sumQty(rows, 'manufacturer').slice(0, 12);
+            const byType = sumQty(rows, 'type').slice(0, 12);
+            const bySize = sumQty(rows, 'size').slice(0, 18);
+            charts.byManu = new Chart(document.getElementById('c_by_manu'), { type: 'bar', data: { labels: byManu.map(d => d[0]), datasets: [{ label: 'Kg', data: byManu.map(d => d[1]) }] }, options: commonBar() });
+            charts.byType = new Chart(document.getElementById('c_by_type'), { type: 'bar', data: { labels: byType.map(d => d[0]), datasets: [{ label: 'Kg', data: byType.map(d => d[1]) }] }, options: commonBar() });
+            charts.bySize = new Chart(document.getElementById('c_by_size'), { type: 'bar', data: { labels: bySize.map(d => d[0]), datasets: [{ label: 'Kg', data: bySize.map(d => d[1]) }] }, options: commonBar() });
+
+            const byStatus = countBy(rows, 'status');
+            const delivered = rows.reduce((a, r) => { const k = r.delivered ? 'Delivered' : 'Not Delivered'; a[k] = (a[k] || 0) + 1; return a }, {});
+            charts.status = new Chart(document.getElementById('c_status'), { type: 'doughnut', data: { labels: byStatus.map(d => d[0]), datasets: [{ data: byStatus.map(d => d[1]) }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#9fb0d0' } } } } });
+            charts.delivery = new Chart(document.getElementById('c_delivery'), { type: 'doughnut', data: { labels: Object.keys(delivered), datasets: [{ data: Object.values(delivered) }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#9fb0d0' } } } } });
+        }
+
+        function renderClientIntel(rows) {
+            const focus = document.getElementById('focusClient').value;
+            const rowsFor = focus ? rows.filter(r => r.client === focus) : rows;
+
+            // Top clients by qty
+            const topClients = sumQty(rows, 'client').slice(0, 12);
+            charts.clientTop = new Chart(document.getElementById('c_client_top'), { type: 'bar', data: { labels: topClients.map(d => d[0]), datasets: [{ label: 'Kg', data: topClients.map(d => d[1]) }] }, options: commonBar() });
+
+            // Focus client distributions
+            const cSize = sumQty(rowsFor, 'size').slice(0, 12);
+            charts.clientSize = new Chart(document.getElementById('c_client_size'), { type: 'bar', data: { labels: cSize.map(d => d[0]), datasets: [{ label: 'Kg', data: cSize.map(d => d[1]) }] }, options: commonBar() });
+            const cType = sumQty(rowsFor, 'type').slice(0, 12);
+            charts.clientType = new Chart(document.getElementById('c_client_type'), { type: 'bar', data: { labels: cType.map(d => d[0]), datasets: [{ label: 'Kg', data: cType.map(d => d[1]) }] }, options: commonBar() });
+
+            // Size -> Manufacturer mix (stacked) for top sizes overall
+            const sizesTop = sumQty(rows, 'size').slice(0, 8).map(s => s[0]);
+            const manuBySize = new Map();
+            for (const r of rows) { if (!sizesTop.includes(r.size)) continue; const m = manuBySize.get(r.size) || new Map(); m.set(r.manufacturer, (m.get(r.manufacturer) || 0) + r.qty); manuBySize.set(r.size, m); }
+            const manuSet = new Set(); manuBySize.forEach(m => m.forEach((_, k) => manuSet.add(k)));
+            const labels = sizesTop, manus = [...manuSet];
+            const datasets = manus.map((m, i) => ({ label: m, data: labels.map(sz => (manuBySize.get(sz)?.get(m) || 0)) }));
+            charts.sizeManu = new Chart(document.getElementById('c_size_manu'), { type: 'bar', data: { labels, datasets }, options: { ...commonBar(), plugins: { legend: { position: 'bottom', labels: { color: '#9fb0d0' } } }, scales: { x: { ...commonBar().scales.x, stacked: true }, y: { ...commonBar().scales.y, stacked: true } } } });
+
+            // Client Insights table (logical)
+            const { rateMap, prefMap } = buildClientLookups();
+            const tbody = document.querySelector('#t_clients tbody');
+            const byClient = new Map(); // client -> agg
+            for (const r of rows) {
+                const a = byClient.get(r.client) || { qty: 0, rev: 0, cost: 0, profit: 0, last: null, size: new Map(), type: new Map(), manu: new Map(), delivered: 0, total: 0 };
+                a.qty += r.qty; a.rev += r.revenue; a.cost += r.cost; a.profit += r.profit; a.total++;
+                if (r.delivered) a.delivered++;
+                if (!a.last || r.date > a.last) a.last = r.date;
+                a.size.set(r.size, (a.size.get(r.size) || 0) + r.qty);
+                a.type.set(r.type, (a.type.get(r.type) || 0) + r.qty);
+                a.manu.set(r.manufacturer, (a.manu.get(r.manufacturer) || 0) + r.qty);
+                byClient.set(r.client, a);
+            }
+            function topEntry(map) { let best = ['-', 0]; for (const [k, v] of map.entries()) { if (v > best[1]) best = [k, v] } return best[0] }
+            const ninetyDays = 1000 * 60 * 60 * 24 * 90; const now = new Date();
+            const lines = [];
+            for (const [client, a] of byClient.entries()) {
+                const avg = a.qty ? a.rev / a.qty : 0;
+                const topSize = topEntry(a.size); const topType = topEntry(a.type);
+                const realizedTop = (() => {
+                    // avg sell price for orders matching top size+type
+                    let q = 0, rev = 0; for (const r of rows) { if (r.client === client && r.size === topSize && r.type === topType) { q += r.qty; rev += r.revenue } }
+                    return q ? (rev / q) : 0;
+                })();
+                const configured = rateMap.get(`${client}|${keyST(topSize, topType)}`) || 0;
+                const prefs = [...(prefMap.get(client) || new Set())].join(', ');
+                const topManu = topEntry(a.manu);
+                const adherence = prefs ? (prefs.split(',').map(s => s.trim()).includes(topManu) ? 'Yes' : 'No') : 'n/a';
+                const lastStr = a.last ? a.last.toISOString().slice(0, 10) : '-';
+                const churn = a.last ? ((now - a.last) > ninetyDays ? 'High' : 'Low') : '—';
+                lines.push(`<tr>
+          <td><strong>${client || '-'}</strong></td>
+          <td>${fmtQty(a.qty)}</td>
+          <td>${fmtMoney(a.rev)}</td>
+          <td>${fmtMoney(a.profit)}</td>
+          <td>${fmtMoney(avg)}</td>
+          <td>${topSize || '-'}</td>
+          <td>${topType || '-'}</td>
+          <td>${realizedTop ? fmtMoney(realizedTop) : '<span class="muted">n/a</span>'}</td>
+          <td>${configured ? fmtMoney(configured) : '<span class="muted">n/a</span>'}</td>
+          <td>${prefs || '<span class="muted">None</span>'}</td>
+          <td>${topManu || '-'}</td>
+          <td>${adherence === 'Yes' ? '<span class="chip ok">Yes</span>' : (adherence === 'No' ? '<span class="chip bad">No</span>' : '<span class="chip">n/a</span>')}</td>
+          <td>${lastStr}</td>
+          <td>${churn === 'High' ? '<span class="chip bad">High</span>' : '<span class="chip ok">Low</span>'}</td>
+        </tr>`);
+            }
+            tbody.innerHTML = lines.sort().join('') || `<tr><td colspan="14" class="muted" style="text-align:center">No client data</td></tr>`;
+        }
+
+        function renderMapping(rows) {
+            const { costMap, minCost } = buildManuCost();
+            const byST = new Map(); // st -> Map(manu->qty)
+            for (const r of rows) { const st = keyST(r.size, r.type); const m = byST.get(st) || new Map(); m.set(r.manufacturer, (m.get(r.manufacturer) || 0) + r.qty); byST.set(st, m) }
+            const tbody = document.querySelector('#t_mapping tbody');
+            const lines = [];
+            for (const [st, mm] of byST.entries()) {
+                const [size, type] = st.split('|||');
+                // historical top
+                let top = ['-', 0]; mm.forEach((v, k) => { if (v > top[1]) top = [k, v] });
+                // preferred union across clients who bought this ST
+                const prefsSet = new Set();
+                for (const c of CLIENTS) { if (c.size === size && c.type === type) { c.pref.split(',').map(s => s.trim()).filter(Boolean).forEach(p => prefsSet.add(p)) } }
+                const prefs = [...prefsSet];
+                // recommended: if any preferred manu has cost info choose the lowest cost among preferred; else global lowest cost
+                const cm = costMap.get(st) || new Map();
+                let rec = null; let best = Infinity;
+                const candidates = prefs.length ? prefs : [...cm.keys()];
+                for (const m of candidates) { const cost = cm.get(m); if (typeof cost === 'number' && cost >= 0 && cost < best) { best = cost; rec = m } }
+                if (rec === null) { // fallback: use global min cost value but unknown manu
+                    // try to find which manu has minCost
+                    const mc = minCost.get(st);
+                    if (mc !== undefined) {
+                        for (const [m, c] of (cm.entries())) { if (c === mc) { rec = m; best = c; break } }
+                        if (rec === null) { rec = '—'; best = mc }
+                    } else { rec = '—'; best = 0 }
+                }
+                lines.push(`<tr>
+          <td>${size}</td>
+          <td>${type}</td>
+          <td>${top[0]}</td>
+          <td>${prefs.length ? prefs.join(', ') : '<span class="muted">—</span>'}</td>
+          <td>${rec}</td>
+          <td>${best ? '₹' + INR.format(best) : '<span class="muted">n/a</span>'}</td>
+        </tr>`)
+            }
+            tbody.innerHTML = lines.sort().join('') || `<tr><td colspan="6" class="muted" style="text-align:center">No mapping data</td></tr>`;
+        }
+
+        // Report CSV (current filtered data + period summary)
+        function downloadReport(rows, groups) {
+            const header = ['Order ID', 'Date', 'Client', 'Size', 'Type', 'Qty (kg)', 'Manufacturer', 'Delivered', 'Status', 'Sell ₹/kg', 'Cost ₹/kg', 'Revenue ₹', 'Cost ₹', 'Profit ₹', 'Pending ₹'];
+            const lines = rows.map(r => [
+                r.orderID, r.date ? r.date.toISOString().slice(0, 10) : '', r.client, r.size, r.type, r.qty, r.manufacturer, r.delivered ? 'Yes' : 'No', r.status,
+                r.sellPrice, r.costPrice, Math.round(r.revenue), Math.round(r.cost), Math.round(r.profit), Math.round(r.pending)
+            ]);
+            lines.unshift(header);
+            // add a blank and then period summary
+            lines.push([]);
+            lines.push(['Period', 'Orders', 'Open', 'Closed', 'Qty', 'Revenue', 'Cost', 'Profit', 'Avg ₹/kg', 'Got', 'Credit']);
+            for (const g of groups) { lines.push([g.period, g.orders, g.open, g.closed, Math.round(g.qty), Math.round(g.revenue), Math.round(g.cost), Math.round(g.profit), g.qty ? Math.round(g.revenue / g.qty) : 0, Math.round(g.got), Math.round(g.pending)]) }
+            const csv = lines.map(row => row.map(x => (x === undefined || x === null) ? '' : String(x).includes(',') ? '"' + String(x).replace(/"/g, '""') + '"' : String(x)).join(',')).join('\n');
+            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'biobags_report.csv'; document.body.appendChild(a); a.click(); a.remove();
+        }
+
+        // ====== Refresh ======
+        function refresh() {
+            try {
+                if (ORDERS.length === 0) { setError('No data. Make sure the sheets are public (Anyone with the link → Viewer).'); return; }
+                setError(null);
+                const filtered = applyFilters(ORDERS);
+                const groups = groupByPeriod(filtered);
+                renderKPIs(filtered);
+                renderPeriodTable(groups);
+                renderTrendCharts(groups);
+                renderDistributions(filtered);
+                renderClientIntel(filtered);
+                renderMapping(filtered);
+                // resize charts on container resize
+                requestAnimationFrame(() => { Object.values(charts).forEach(c => c && c.resize && c.resize()) });
+                return { filtered, groups }
+            } catch (e) { setError('Error: ' + e.message) }
+        }
+
+        // ====== Events ======
+        document.getElementById('reload').addEventListener('click', async () => { show('loading', true); try { await loadAll(); refresh() } catch (e) { setError(e.message) } finally { show('loading', false) } });
+        document.getElementById('reset').addEventListener('click', () => {
+            document.getElementById('period').value = 'Monthly';
+            document.getElementById('startDate').value = ''; document.getElementById('endDate').value = '';
+            document.getElementById('status').value = 'All'; document.getElementById('delivered').value = 'All';
+            document.getElementById('focusClient').value = ''; document.getElementById('search').value = '';
+            refresh();
+        });
+        ['period', 'status', 'delivered', 'startDate', 'endDate', 'focusClient', 'search'].forEach(id => {
+            document.getElementById(id).addEventListener('input', () => refresh());
+            document.getElementById(id).addEventListener('change', () => refresh());
+        });
+        document.getElementById('download').addEventListener('click', () => { const r = refresh(); if (r) downloadReport(r.filtered, r.groups) });
+
+        // keep charts crisp when panels resize
+        const ro = new ResizeObserver(() => { Object.values(charts).forEach(c => c && c.resize && c.resize()) });
+        document.querySelectorAll('.chart-wrap').forEach(el => ro.observe(el));
+
+        // Init
+        (async function () { try { await loadAll(); refresh() } catch (e) { setError('Load error: ' + e.message); show('loading', false) } })();
+    </script>
+</body>
+
+</html>
