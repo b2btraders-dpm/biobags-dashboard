@@ -306,242 +306,616 @@
                 grid-template-columns: 1fr
             }
         }
+
+        #tabDashboard,
+        #tabReports {
+            min-width: 120px
+        }
+
+        #reports .title,
+        #dashboard .title {
+            letter-spacing: .2px
+        }
+
+        /* Horizontal scroll area for wide tables */
+        .hscroll {
+            overflow-x: auto;
+        }
+
+        /* Keep all content in one line for dense order tables */
+        .nowrap th,
+        .nowrap td {
+            white-space: nowrap;
+        }
+
+        /* Simple pager */
+        .pager {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 10px 14px;
+            border-top: 1px solid var(--ring);
+        }
+
+        .pager button {
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid var(--ring);
+            background: #0b1326;
+            color: var(--fg);
+            cursor: pointer;
+        }
+
+        .pager .info {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        /* --- Mobile overflow fixes & table-only horizontal scroll --- */
+        html,
+        body {
+            max-width: 100vw;
+            overflow-x: hidden;
+            /* prevent page-level horizontal scroll */
+            min-height: 100vh;
+        }
+
+        .hscroll {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            max-width: 100%;
+        }
+
+        /* Let wide tables scroll inside their wrapper instead of growing the page */
+        .hscroll>.table {
+            width: max-content;
+            /* expand to content width */
+            min-width: 100%;
+            /* but at least fill container */
+        }
+
+        /* Panels should not leak content outside on small screens */
+        .panel {
+            overflow: hidden;
+        }
+
+        /* Many inline grids in the markup use minmax(320/340/360px,1fr).
+   Force single-column on phones to avoid overflow from those inline styles */
+        @media (max-width: 600px) {
+
+            #reports .grid,
+            #dashboard .grid {
+                grid-template-columns: 1fr !important;
+            }
+
+            /* Optional: make sticky headers more compact on phones */
+            .table thead th {
+                font-size: 11px;
+                padding: 8px;
+            }
+
+            .table tbody td {
+                font-size: 13px;
+                padding: 8px;
+            }
+            .title-buttons {
+                flex-direction: row !important;
+            }
+        }
+
+        /* Friendlier month picker styling */
+        .month-picker {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .month-btn {
+            width: 36px;
+            height: 36px;
+            border: 1px solid var(--ring);
+            background: #0b1326;
+            color: var(--fg);
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .month-label {
+            flex: 1 1 auto;
+            padding: 9px 10px;
+            border: 1px solid #314061;
+            background: #0b1326;
+            color: var(--fg);
+            border-radius: 10px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        /* Let the Period control span two columns on desktop for more room */
+        .controls .span-2 {
+            grid-column: span 2;
+        }
+        .title-buttons {
+                flex-direction: row !important;
+            }
+        @media (max-width: 920px) {
+            .controls .span-2 {
+                grid-column: span 1;
+            }
+        }
+
+        /* Layout for the Period row: big select + navigator */
+        .period-wrap {
+            display: grid;
+            grid-template-columns: minmax(180px, 260px) 1fr;
+            /* roomy select */
+            gap: 8px;
+        }
+
+        @media (max-width: 600px) {
+            .period-wrap {
+                grid-template-columns: 1fr;
+            }
+
+            /* stack on small screens */
+        }
+
+        /* Make the navigator label flexible and readable */
+        .month-picker {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            width: 100%;
+        }
+
+        .month-label {
+            flex: 1 1 auto;
+            min-width: 160px;
+            padding: 9px 10px;
+            border: 1px solid var(--ring);
+            border-radius: 10px;
+            background: #0b1326;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .month-btn {
+            width: 36px;
+            height: 36px;
+            border: 1px solid var(--ring);
+            background: #0b1326;
+            border-radius: 10px;
+        }
     </style>
 </head>
 
 <body>
     <div class="wrap">
-        <h1>Biobags Insights Dashboard</h1>
+        <!-- Tabs -->
+        <div class="title-buttons" style="grid-template-columns: 1fr auto; align-items:center; margin-bottom:12px">
+            <h1>Biobags Insight  Dashboard</h1>
+            <div style="display:flex; gap:8px">
+                <button class="btn ghost" id="tabDashboard">Dashboard</button>
+                <button class="btn ghost" id="tabReports">Reports</button>
+            </div>
+        </div>
+        <div id="dashboard">
+            <!-- ✅ MOVE your existing Dashboard HTML here (everything you already have today) -->
 
-        <!-- Controls -->
-        <div class="grid controls panel pad">
-            <div>
-                <label>📅 Period</label>
-                <select id="period">
-                    <option>Monthly</option>
-                    <option>Quarterly</option>
-                    <option>Half-Yearly</option>
-                    <option>Yearly</option>
-                </select>
-            </div>
-            <div>
-                <label>📅 Start Date</label>
-                <input type="date" id="startDate" />
-            </div>
-            <div>
-                <label>📅 End Date</label>
-                <input type="date" id="endDate" />
-            </div>
-            <div>
-                <label>📋 Status</label>
-                <select id="status">
-                    <option>All</option>
-                    <option>Open</option>
-                    <option>Closed</option>
-                </select>
-            </div>
-            <div>
-                <label>🚚 Delivered</label>
-                <select id="delivered">
-                    <option>All</option>
-                    <option>Yes</option>
-                    <option>No</option>
-                </select>
-            </div>
-            <div>
-                <label>👤 Focus Client</label>
-                <select id="focusClient">
-                    <option value="">All</option>
-                </select>
-                <input type="hidden" id="search" placeholder="Type to filter" />
-            </div>
-            <div>
-                <label>🔧 Actions</label>
-                <div class="row">
-                    <button class="btn" id="reload">Refresh</button>
-                    <button class="btn secondary" id="download">Download</button>
+            <!-- Controls -->
+            <div class="grid controls panel pad">
+                <div>
+                    <label>📅 Period</label>
+                    <select id="period">
+                        <option>Monthly</option>
+                        <option>Quarterly</option>
+                        <option>Half-Yearly</option>
+                        <option>Yearly</option>
+                    </select>
+                </div>
+                <div>
+                    <label>📅 Start Date</label>
+                    <input type="date" id="startDate" />
+                </div>
+                <div>
+                    <label>📅 End Date</label>
+                    <input type="date" id="endDate" />
+                </div>
+                <div>
+                    <label>📋 Status</label>
+                    <select id="status">
+                        <option>All</option>
+                        <option>Open</option>
+                        <option>Closed</option>
+                    </select>
+                </div>
+                <div>
+                    <label>🚚 Delivered</label>
+                    <select id="delivered">
+                        <option>All</option>
+                        <option>Yes</option>
+                        <option>No</option>
+                    </select>
+                </div>
+                <div>
+                    <label>👤 Focus Client</label>
+                    <select id="focusClient">
+                        <option value="">All</option>
+                    </select>
+                    <input type="hidden" id="search" placeholder="Type to filter" />
+                </div>
+                <div>
+                    <label>🔧 Actions</label>
+                    <div class="row">
+                        <button class="btn" id="reload">Refresh</button>
+                        <button class="btn secondary" id="download">Download</button>
+                    </div>
+                </div>
+                <div>
+                    <label>♻️ Filters</label>
+                    <button class="btn ghost" id="reset">Reset</button>
                 </div>
             </div>
-            <div>
-                <label>♻️ Filters</label>
-                <button class="btn ghost" id="reset">Reset</button>
+
+            <div id="loading" class="loading" style="display:none">Loading data…</div>
+            <div id="error" class="error"></div>
+
+            <!-- KPI cards -->
+            <div class="grid cards" style="margin-top:16px">
+                <div class="panel pad kpi">
+                    <div class="title">📦 Orders</div>
+                    <div class="v" id="k_orders">-</div>
+                    <div class="subl">count</div>
+                </div>
+                <div class="panel pad kpi">
+                    <div class="title">⚖️ Quantity</div>
+                    <div class="v" id="k_qty">-</div>
+                    <div class="subl">kg</div>
+                </div>
+                <div class="panel pad kpi">
+                    <div class="title">💰 Revenue</div>
+                    <div class="v" id="k_rev">-</div>
+                    <div class="subl">₹</div>
+                </div>
+                <div class="panel pad kpi">
+                    <div class="title">💸 Cost</div>
+                    <div class="v" id="k_cost">-</div>
+                    <div class="subl">₹</div>
+                </div>
+                <div class="panel pad kpi">
+                    <div class="title">📈 Profit</div>
+                    <div class="v" id="k_profit">-</div>
+                    <div class="subl">₹ total</div>
+                </div>
+                <div class="panel pad kpi">
+                    <div class="title">📊 Avg Price</div>
+                    <div class="v" id="k_avgsp">-</div>
+                    <div class="subl">₹/kg (sell | cost | margin%)</div>
+                </div>
+                <div class="panel pad kpi">
+                    <div class="title">⏳ Credit</div>
+                    <div class="v" id="k_pending">-</div>
+                    <div class="subl">₹ receivables</div>
+                </div>
+                <div class="panel pad kpi">
+                    <div class="title">🧾 Open vs Closed</div>
+                    <div class="v"><span id="k_open">-</span> / <span id="k_closed">-</span></div>
+                    <div class="subl">open / closed</div>
+                </div>
+            </div>
+
+            <!-- Time summary table -->
+            <div class="panel" style="margin-top:16px">
+                <div class="pad">
+                    <div class="title">📊 Period Summary</div>
+                </div>
+                <div style="overflow:auto;border-top:1px solid var(--ring)">
+                    <table class="table" id="t_period">
+                        <thead></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Revenue/Profit trends -->
+            <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(340px,1fr));margin-top:16px">
+                <div class="panel pad">
+                    <div class="title">📉 Revenue & Cost Over Time</div>
+                    <div class="chart-wrap"><canvas id="c_rev_cost"></canvas></div>
+                </div>
+                <div class="panel pad">
+                    <div class="title">📈 Profit Over Time</div>
+                    <div class="chart-wrap"><canvas id="c_profit"></canvas></div>
+                </div>
+                
+            </div>
+
+            <!-- Core distributions -->
+            <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(340px,1fr));margin-top:16px">
+                <div class="panel pad">
+                    <div class="title">🏭 Manufacturer-wise Quantity (kg)</div>
+                    <div class="chart-wrap"><canvas id="c_by_manu"></canvas></div>
+                </div>
+                <div class="panel pad">
+                    <div class="title">🎨 Type-wise Quantity (kg)</div>
+                    <div class="chart-wrap"><canvas id="c_by_type"></canvas></div>
+                </div>
+            </div>
+            <div class="panel pad" style="margin-top:16px">
+                <div class="title">📏 Size-wise Quantity (kg)</div>
+                <div class="chart-wrap tall"><canvas id="c_by_size"></canvas></div>
+            </div>
+
+            <!-- Status & Delivery -->
+            <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(340px,1fr));margin-top:16px">
+                <div class="panel pad">
+                    <div class="title">📋 Status Distribution</div>
+                    <div class="chart-wrap"><canvas id="c_status"></canvas></div>
+                </div>
+                <div class="panel pad">
+                    <div class="title">🚚 Delivery Status</div>
+                    <div class="chart-wrap"><canvas id="c_delivery"></canvas></div>
+                </div>
+            </div>
+
+            <!-- Client Intelligence -->
+            <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(360px,1fr));margin-top:16px">
+                <div class="panel pad">
+                    <div class="title">👑 Top Clients by Quantity (kg)</div>
+                    <div class="chart-wrap"><canvas id="c_client_top"></canvas></div>
+                </div>
+                <div class="panel pad">
+                    <div class="title">🧭 Focus Client → Size (kg)</div>
+                    <div class="chart-wrap"><canvas id="c_client_size"></canvas></div>
+                </div>
+                <div class="panel pad">
+                    <div class="title">🎨 Focus Client → Type (kg)</div>
+                    <div class="chart-wrap"><canvas id="c_client_type"></canvas></div>
+                </div>
+                <div class="panel pad">
+                    <div class="title">🏭 Size → Manufacturer Mix (Top Sizes)</div>
+                    <div class="chart-wrap"><canvas id="c_size_manu"></canvas></div>
+                </div>
+            </div>
+
+            <!-- Client Insights (improved logic) -->
+            <div class="panel" style="margin-top:16px">
+                <div class="pad">
+                    <div class="title">🧑‍🤝‍🧑 Client Insights (behavior, pricing, preferences & risk)</div>
+                </div>
+                <div style="overflow:auto;border-top:1px solid var(--ring)">
+                    <table class="table" id="t_clients">
+                        <thead>
+                            <tr>
+                                <th>Client</th>
+                                <th>Total Qty</th>
+                                <th>Revenue</th>
+                                <th>Profit</th>
+                                <th>Avg ₹/kg</th>
+                                <th>Top Size</th>
+                                <th>Top Type</th>
+                                <th>Realized ₹/kg (Top)</th>
+                                <th>Configured ₹/kg (Top)</th>
+                                <th>Pref. Manufacturers</th>
+                                <th>Top Actual Manufacturer</th>
+                                <th>Pref. Adherence</th>
+                                <th>Last Order</th>
+                                <th>Churn Risk</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Size–Type to Manufacturer Mapping (logical) -->
+            <div class="panel" style="margin-top:16px">
+                <div class="pad">
+                    <div class="title">🔗 Size–Type → Manufacturer (Top by history, costs & preferences)</div>
+                    <div class="notice muted">For each Size–Type: shows historical top manufacturer by qty, union of
+                        client
+                        preferences, recommended manufacturer (lowest cost among preferred if present, else global
+                        lowest
+                        cost), and the cost used.</div>
+                </div>
+                <div style="overflow:auto;border-top:1px solid var(--ring)">
+                    <table class="table" id="t_mapping">
+                        <thead>
+                            <tr>
+                                <th>Size</th>
+                                <th>Type</th>
+                                <th>Top Manufacturer (history)</th>
+                                <th>Preferred Manufacturers</th>
+                                <th>Recommended Manufacturer</th>
+                                <th>Cost Used</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
-        <div id="loading" class="loading" style="display:none">Loading data…</div>
-        <div id="error" class="error"></div>
+        <!-- ===================== REPORTS SECTION ===================== -->
+        <div id="reports" style="display:none">
+            <!-- Reports: Controls -->
+            <div class="grid controls panel pad" style="margin-top:8px">
+                <div>
+                    <label>👤 Client</label>
+                    <select id="r_client">
+                        <option value="">All</option>
+                    </select>
+                </div>
+                <div>
+                    <label>🏭 Manufacturer</label>
+                    <select id="r_manu">
+                        <option value="">All</option>
+                    </select>
+                </div>
+                <div class="span-2">
+                    <label>🗓 Period</label>
+                    <div class="period-wrap">
+                        <select id="r_period_type">
+                            <option value="month" selected>Month</option>
+                            <option value="quarter">Quarter</option>
+                            <option value="half">Half-Year</option>
+                            <option value="year">Year</option>
+                            <option value="all">All time</option>
+                        </select>
 
-        <!-- KPI cards -->
-        <div class="grid cards" style="margin-top:16px">
-            <div class="panel pad kpi">
-                <div class="title">📦 Orders</div>
-                <div class="v" id="k_orders">-</div>
-                <div class="subl">count</div>
-            </div>
-            <div class="panel pad kpi">
-                <div class="title">⚖️ Quantity</div>
-                <div class="v" id="k_qty">-</div>
-                <div class="subl">kg</div>
-            </div>
-            <div class="panel pad kpi">
-                <div class="title">💰 Revenue</div>
-                <div class="v" id="k_rev">-</div>
-                <div class="subl">₹</div>
-            </div>
-            <div class="panel pad kpi">
-                <div class="title">💸 Cost</div>
-                <div class="v" id="k_cost">-</div>
-                <div class="subl">₹</div>
-            </div>
-            <div class="panel pad kpi">
-                <div class="title">📈 Profit</div>
-                <div class="v" id="k_profit">-</div>
-                <div class="subl">₹ total</div>
-            </div>
-            <div class="panel pad kpi">
-                <div class="title">📊 Avg Price</div>
-                <div class="v" id="k_avgsp">-</div>
-                <div class="subl">₹/kg (sell | cost | margin%)</div>
-            </div>
-            <div class="panel pad kpi">
-                <div class="title">⏳ Credit</div>
-                <div class="v" id="k_pending">-</div>
-                <div class="subl">₹ receivables</div>
-            </div>
-            <div class="panel pad kpi">
-                <div class="title">🧾 Open vs Closed</div>
-                <div class="v"><span id="k_open">-</span> / <span id="k_closed">-</span></div>
-                <div class="subl">open / closed</div>
-            </div>
-        </div>
+                        <div class="month-picker">
+                            <button type="button" class="month-btn" id="mp_prev">‹</button>
+                            <div class="month-label" id="mp_label">—</div>
+                            <button type="button" class="month-btn" id="mp_next">›</button>
+                            <input type="hidden" id="r_period_value" />
+                        </div>
+                    </div>
 
-        <!-- Time summary table -->
-        <div class="panel" style="margin-top:16px">
-            <div class="pad">
-                <div class="title">📊 Period Summary</div>
-            </div>
-            <div style="overflow:auto;border-top:1px solid var(--ring)">
-                <table class="table" id="t_period">
-                    <thead></thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
+                    <!-- keep your hidden search input as-is -->
+                    <input type="hidden" id="r_search" placeholder="Search in orders (client/size/type/manufacturer)" />
+                </div>
 
-        <!-- Revenue/Profit trends -->
-        <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(340px,1fr));margin-top:16px">
-            <div class="panel pad">
-                <div class="title">📉 Revenue & Cost Over Time</div>
-                <div class="chart-wrap"><canvas id="c_rev_cost"></canvas></div>
-            </div>
-            <div class="panel pad">
-                <div class="title">📈 Profit Over Time</div>
-                <div class="chart-wrap"><canvas id="c_profit"></canvas></div>
-            </div>
-        </div>
 
-        <!-- Core distributions -->
-        <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(340px,1fr));margin-top:16px">
-            <div class="panel pad">
-                <div class="title">🏭 Manufacturer-wise Quantity (kg)</div>
-                <div class="chart-wrap"><canvas id="c_by_manu"></canvas></div>
+                <div>
+                    <label>🔧 Actions</label>
+                    <div class="row">
+                        <button class="btn" id="r_refresh">Apply</button>
+                        <button class="btn secondary" id="r_download">Export CSV</button>
+                    </div>
+                </div>
+                <div>
+                    <label>♻️ Filters</label>
+                    <button class="btn ghost" id="r_reset">Reset</button>
+                </div>
             </div>
-            <div class="panel pad">
-                <div class="title">🎨 Type-wise Quantity (kg)</div>
-                <div class="chart-wrap"><canvas id="c_by_type"></canvas></div>
-            </div>
-        </div>
-        <div class="panel pad" style="margin-top:16px">
-            <div class="title">📏 Size-wise Quantity (kg)</div>
-            <div class="chart-wrap tall"><canvas id="c_by_size"></canvas></div>
-        </div>
 
-        <!-- Status & Delivery -->
-        <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(340px,1fr));margin-top:16px">
-            <div class="panel pad">
-                <div class="title">📋 Status Distribution</div>
-                <div class="chart-wrap"><canvas id="c_status"></canvas></div>
-            </div>
-            <div class="panel pad">
-                <div class="title">🚚 Delivery Status</div>
-                <div class="chart-wrap"><canvas id="c_delivery"></canvas></div>
-            </div>
-        </div>
+            <!-- Client Deep Dive -->
+            <div class="panel" style="margin-top:16px">
+                <div class="pad">
+                    <div class="title">🧑‍💼 Client Deep Dive</div>
+                    <div class="muted">Shows summary, mixes, and all orders for the selected client (or All).</div>
+                </div>
+                <div style="border-top:1px solid var(--ring)">
+                    <!-- Row 1: Summary only -->
+                    <div class="grid" style="grid-template-columns:1fr; padding:14px; gap:14px">
+                        <div class="panel pad">
+                            <div class="title">Summary</div>
+                            <div class="hscroll">
+                                <table class="table nowrap" id="t_client_summary">
+                                    <thead></thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                            <div id="p_t_client_summary" class="pager"></div>
+                        </div>
+                    </div>
 
-        <!-- Client Intelligence -->
-        <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(360px,1fr));margin-top:16px">
-            <div class="panel pad">
-                <div class="title">👑 Top Clients by Quantity (kg)</div>
-                <div class="chart-wrap"><canvas id="c_client_top"></canvas></div>
+                    <!-- Row 2: Size & Type -->
+                    <div class="grid"
+                        style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); padding:14px; gap:14px">
+                        <div class="panel pad">
+                            <div class="title">Size Mix (kg)</div>
+                            <div class="hscroll">
+                                <table class="table nowrap" id="t_client_size">
+                                    <thead></thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                            <div id="p_t_client_size" class="pager"></div>
+                        </div>
+                        <div class="panel pad">
+                            <div class="title">Type Mix (kg)</div>
+                            <div class="hscroll">
+                                <table class="table nowrap" id="t_client_type">
+                                    <thead></thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                            <div id="p_t_client_type" class="pager"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="panel pad">
-                <div class="title">🧭 Focus Client → Size (kg)</div>
-                <div class="chart-wrap"><canvas id="c_client_size"></canvas></div>
-            </div>
-            <div class="panel pad">
-                <div class="title">🎨 Focus Client → Type (kg)</div>
-                <div class="chart-wrap"><canvas id="c_client_type"></canvas></div>
-            </div>
-            <div class="panel pad">
-                <div class="title">🏭 Size → Manufacturer Mix (Top Sizes)</div>
-                <div class="chart-wrap"><canvas id="c_size_manu"></canvas></div>
-            </div>
-        </div>
 
-        <!-- Client Insights (improved logic) -->
-        <div class="panel" style="margin-top:16px">
-            <div class="pad">
-                <div class="title">🧑‍🤝‍🧑 Client Insights (behavior, pricing, preferences & risk)</div>
-            </div>
-            <div style="overflow:auto;border-top:1px solid var(--ring)">
-                <table class="table" id="t_clients">
-                    <thead>
-                        <tr>
-                            <th>Client</th>
-                            <th>Total Qty</th>
-                            <th>Revenue</th>
-                            <th>Profit</th>
-                            <th>Avg ₹/kg</th>
-                            <th>Top Size</th>
-                            <th>Top Type</th>
-                            <th>Realized ₹/kg (Top)</th>
-                            <th>Configured ₹/kg (Top)</th>
-                            <th>Pref. Manufacturers</th>
-                            <th>Top Actual Manufacturer</th>
-                            <th>Pref. Adherence</th>
-                            <th>Last Order</th>
-                            <th>Churn Risk</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
+            <!-- Manufacturer Deep Dive -->
+            <div class="panel" style="margin-top:16px">
+                <div class="pad">
+                    <div class="title">🏭 Manufacturer Deep Dive</div>
+                    <div class="muted">Shows summary, mixes, top clients, and all orders for the selected manufacturer
+                        (or All).</div>
+                </div>
+                <div style="border-top:1px solid var(--ring)">
+                    <!-- Row 1: Summary only -->
+                    <div class="grid" style="grid-template-columns:1fr; padding:14px; gap:14px">
+                        <div class="panel pad">
+                            <div class="title">Summary</div>
+                            <div class="hscroll">
+                                <table class="table nowrap" id="t_manu_summary">
+                                    <thead></thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                            <div id="p_t_manu_summary" class="pager"></div>
+                        </div>
+                    </div>
 
-        <!-- Size–Type to Manufacturer Mapping (logical) -->
-        <div class="panel" style="margin-top:16px">
-            <div class="pad">
-                <div class="title">🔗 Size–Type → Manufacturer (Top by history, costs & preferences)</div>
-                <div class="notice muted">For each Size–Type: shows historical top manufacturer by qty, union of client
-                    preferences, recommended manufacturer (lowest cost among preferred if present, else global lowest
-                    cost), and the cost used.</div>
+                    <!-- Row 2: Clients, Size, Type -->
+                    <div class="grid"
+                        style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); padding:14px; gap:14px">
+                        <div class="panel pad">
+                            <div class="title">Clients (by Qty)</div>
+                            <div class="hscroll">
+                                <table class="table nowrap" id="t_manu_clients">
+                                    <thead></thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                            <div id="p_t_manu_clients" class="pager"></div>
+                        </div>
+                        <div class="panel pad">
+                            <div class="title">Size Mix (kg)</div>
+                            <div class="hscroll">
+                                <table class="table nowrap" id="t_manu_size">
+                                    <thead></thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                            <div id="p_t_manu_size" class="pager"></div>
+                        </div>
+                        <div class="panel pad">
+                            <div class="title">Type Mix (kg)</div>
+                            <div class="hscroll">
+                                <table class="table nowrap" id="t_manu_type">
+                                    <thead></thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                            <div id="p_t_manu_type" class="pager"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div style="overflow:auto;border-top:1px solid var(--ring)">
-                <table class="table" id="t_mapping">
-                    <thead>
-                        <tr>
-                            <th>Size</th>
-                            <th>Type</th>
-                            <th>Top Manufacturer (history)</th>
-                            <th>Preferred Manufacturers</th>
-                            <th>Recommended Manufacturer</th>
-                            <th>Cost Used</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+
+            <!-- Shared Orders (Filtered by report controls) -->
+            <div class="panel" style="margin-top:16px">
+                <div class="pad">
+                    <div class="title">📜 All Orders (Filtered)</div>
+                    <div class="muted">This table reflects current Client/Manufacturer/Month/Search filters.</div>
+                </div>
+                <div class="hscroll" style="border-top:1px solid var(--ring)">
+                    <table class="table nowrap" id="t_orders_shared">
+                        <thead></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div id="p_t_orders_shared" class="pager"></div>
             </div>
+
         </div>
+        <!-- ===================== /REPORTS SECTION ===================== -->
 
     </div>
 
@@ -625,6 +999,12 @@
             const sel = document.getElementById('focusClient');
             const clients = [...new Set(ORDERS.map(r => r.client).filter(Boolean))].sort((a, b) => a.localeCompare(b));
             sel.innerHTML = '<option value="">All</option>' + clients.map(c => `<option>${c}</option>`).join('');
+
+            const rClient = document.getElementById('r_client');
+            const rManu = document.getElementById('r_manu');
+            rClient.innerHTML = '<option value="">All</option>' + clients.map(c => `<option>${c}</option>`).join('');
+            const manus = [...new Set(ORDERS.map(r => r.manufacturer).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+            rManu.innerHTML = '<option value="">All</option>' + manus.map(c => `<option>${c}</option>`).join('');
 
             show('loading', false);
         }
@@ -973,6 +1353,638 @@
 
         // Init
         (async function () { try { await loadAll(); refresh() } catch (e) { setError('Load error: ' + e.message); show('loading', false) } })();
+
+        // ===== Reports utils =====
+        const monthStartEnd = (yyyyMM) => {
+            if (!yyyyMM) return [null, null];
+            const [y, m] = yyyyMM.split('-').map(n => +n);
+            const start = new Date(y, m - 1, 1);
+            const end = new Date(y, m, 0); // last day of month
+            end.setHours(23, 59, 59, 999);
+            return [start, end];
+        };
+        const txt = (v) => (v == null || v === undefined || v === '') ? '' : String(v);
+        const pushRows = (el, rowsHtml, emptyCols = 3, emptyMsg = 'No data') => {
+            el.innerHTML = rowsHtml || `<tr><td colspan="${emptyCols}" class="muted" style="text-align:center">${emptyMsg}</td></tr>`;
+        };
+
+
+        // ===== Tabs: Dashboard / Reports
+        const $dash = document.getElementById('dashboard');
+        const $reps = document.getElementById('reports');
+        function showTab(which) {
+            if (which === 'reports') {
+                $dash.style.display = 'none';
+                $reps.style.display = 'block';
+            } else {
+                $dash.style.display = 'block';
+                $reps.style.display = 'none';
+            }
+            // optional: visual state on buttons
+            document.getElementById('tabDashboard').classList.toggle('ghost', which !== 'dashboard');
+            document.getElementById('tabReports').classList.toggle('ghost', which !== 'reports');
+        }
+        document.getElementById('tabDashboard').addEventListener('click', () => showTab('dashboard'));
+        document.getElementById('tabReports').addEventListener('click', () => {
+            showTab('reports');
+            initPeriodPicker();    // <-- add this line
+            buildReports();
+        });
+
+
+        function applyReportFilters(rows) {
+            const fc = document.getElementById('r_client').value;
+            const fm = document.getElementById('r_manu').value;
+
+            // NEW: type/value come from the period picker
+            const type = document.getElementById('r_period_type').value;
+            const value = document.getElementById('r_period_value').value;
+            const [ms, me] = getPeriodBounds(type, value);
+
+            const q = (document.getElementById('r_search')?.value || '').toLowerCase().trim();
+
+            return rows.filter(r => {
+                if (!r.date) return false;
+                if (fc && r.client !== fc) return false;
+                if (fm && r.manufacturer !== fm) return false;
+
+                // When "All time", ms & me are null ⇒ no date filter
+                if (ms && r.date < ms) return false;
+                if (me && r.date > me) return false;
+
+                if (q) {
+                    const hay = `${r.client}|${r.size}|${r.type}|${r.manufacturer}|${r.orderID}`.toLowerCase();
+                    if (!hay.includes(q)) return false;
+                }
+                return true;
+            });
+        }
+
+
+
+        function groupSum(rows, key) {
+            const m = new Map();
+            for (const r of rows) {
+                const k = r[key] || 'Unknown';
+                m.set(k, (m.get(k) || 0) + r.qty);
+            }
+            return [...m.entries()].sort((a, b) => b[1] - a[1]);
+        }
+
+        function money(n) { return '₹' + INR.format(Math.round(n || 0)); }
+        function qtyfmt(n) { return INR.format(Math.round((n || 0) * 100) / 100); }
+
+        function renderClientReport(filtered) {
+            const fc = document.getElementById('r_client').value;
+            const rows = fc ? filtered.filter(r => r.client === fc) : filtered;
+
+            // Summary (single row)
+            tableRenderers.t_client_summary = () => {
+                const orders = rows.length;
+                const qty = rows.reduce((s, r) => s + r.qty, 0);
+                const rev = rows.reduce((s, r) => s + r.revenue, 0);
+                const cost = rows.reduce((s, r) => s + r.cost, 0);
+                const profit = rows.reduce((s, r) => s + r.profit, 0);
+                const got = rows.reduce((s, r) => s + r.got, 0);
+                const pending = rows.reduce((s, r) => s + r.pending, 0);
+                const avgSell = qty ? (rev / qty) : 0;
+                const avgCost = qty ? (cost / qty) : 0;
+                const margin = avgSell ? ((avgSell - avgCost) / avgSell * 100) : 0;
+                const last = rows.reduce((mx, r) => (!mx || r.date > mx) ? r.date : mx, null);
+
+                const thead = `<tr>
+      <th>Client</th><th>Orders</th><th>Qty (kg)</th><th>Revenue</th><th>Cost</th><th>Profit</th>
+      <th>Avg Sell ₹/kg</th><th>Avg Cost ₹/kg</th><th>Margin %</th><th>Got</th><th>Pending</th><th>Last Order</th>
+    </tr>`;
+                const tr = `<tr>
+      <td><strong>${fc || 'All'}</strong></td>
+      <td>${INR.format(orders)}</td>
+      <td>${fmtQty(qty)}</td>
+      <td>${fmtMoney(rev)}</td>
+      <td>${fmtMoney(cost)}</td>
+      <td>${fmtMoney(profit)}</td>
+      <td>${fmtMoney(avgSell)}</td>
+      <td>${fmtMoney(avgCost)}</td>
+      <td>${margin ? margin.toFixed(1) : '0.0'}%</td>
+      <td>${fmtMoney(got)}</td>
+      <td>${fmtMoney(pending)}</td>
+      <td>${last ? last.toISOString().slice(0, 10) : '-'}</td>
+    </tr>`;
+                return { thead, rows: [tr] };
+            };
+            pagers.t_client_summary = { page: 1, total: 1 };
+            reRenderTable('t_client_summary');
+
+            // Size Mix
+            tableRenderers.t_client_size = () => {
+                const groups = groupSum(rows, 'size');
+                const thead = `<tr><th>Size</th><th>Qty (kg)</th></tr>`;
+                const bodyRows = groups.map(([k, v]) => `<tr><td>${k}</td><td>${fmtQty(v)}</td></tr>`);
+                return { thead, rows: bodyRows };
+            };
+            pagers.t_client_size = { page: 1, total: 1 };
+            reRenderTable('t_client_size');
+
+            // Type Mix
+            tableRenderers.t_client_type = () => {
+                const groups = groupSum(rows, 'type');
+                const thead = `<tr><th>Type</th><th>Qty (kg)</th></tr>`;
+                const bodyRows = groups.map(([k, v]) => `<tr><td>${k}</td><td>${fmtQty(v)}</td></tr>`);
+                return { thead, rows: bodyRows };
+            };
+            pagers.t_client_type = { page: 1, total: 1 };
+            reRenderTable('t_client_type');
+        }
+
+        function renderManuReport(filtered) {
+            const fm = document.getElementById('r_manu').value;
+            const rows = fm ? filtered.filter(r => r.manufacturer === fm) : filtered;
+
+            // Summary (single row)
+            tableRenderers.t_manu_summary = () => {
+                const orders = rows.length;
+                const qty = rows.reduce((s, r) => s + r.qty, 0);
+                const rev = rows.reduce((s, r) => s + r.revenue, 0);
+                const cost = rows.reduce((s, r) => s + r.cost, 0);
+                const profit = rows.reduce((s, r) => s + r.profit, 0);
+                const got = rows.reduce((s, r) => s + r.got, 0);
+                const pending = rows.reduce((s, r) => s + r.pending, 0);
+                const avgSell = qty ? (rev / qty) : 0;
+                const avgCost = qty ? (cost / qty) : 0;
+                const margin = avgSell ? ((avgSell - avgCost) / avgSell * 100) : 0;
+                const last = rows.reduce((mx, r) => (!mx || r.date > mx) ? r.date : mx, null);
+
+                const thead = `<tr>
+      <th>Manufacturer</th><th>Orders</th><th>Qty (kg)</th><th>Revenue</th><th>Cost</th><th>Profit</th>
+      <th>Avg Sell ₹/kg</th><th>Avg Cost ₹/kg</th><th>Margin %</th><th>Got</th><th>Pending</th><th>Last Order</th>
+    </tr>`;
+                const tr = `<tr>
+      <td><strong>${fm || 'All'}</strong></td>
+      <td>${INR.format(orders)}</td>
+      <td>${fmtQty(qty)}</td>
+      <td>${fmtMoney(rev)}</td>
+      <td>${fmtMoney(cost)}</td>
+      <td>${fmtMoney(profit)}</td>
+      <td>${fmtMoney(avgSell)}</td>
+      <td>${fmtMoney(avgCost)}</td>
+      <td>${margin ? margin.toFixed(1) : '0.0'}%</td>
+      <td>${fmtMoney(got)}</td>
+      <td>${fmtMoney(pending)}</td>
+      <td>${last ? last.toISOString().slice(0, 10) : '-'}</td>
+    </tr>`;
+                return { thead, rows: [tr] };
+            };
+            pagers.t_manu_summary = { page: 1, total: 1 };
+            reRenderTable('t_manu_summary');
+
+            // Clients (by Qty)
+            tableRenderers.t_manu_clients = () => {
+                const byClient = rows.reduce((m, r) => (m.set(r.client, (m.get(r.client) || 0) + r.qty), m), new Map());
+                const list = [...byClient.entries()].sort((a, b) => b[1] - a[1]);
+                const thead = `<tr><th>Client</th><th>Qty (kg)</th></tr>`;
+                const bodyRows = list.map(([k, v]) => `<tr><td>${k || '-'}</td><td>${fmtQty(v)}</td></tr>`);
+                return { thead, rows: bodyRows };
+            };
+            pagers.t_manu_clients = { page: 1, total: 1 };
+            reRenderTable('t_manu_clients');
+
+            // Size Mix
+            tableRenderers.t_manu_size = () => {
+                const groups = groupSum(rows, 'size');
+                const thead = `<tr><th>Size</th><th>Qty (kg)</th></tr>`;
+                const bodyRows = groups.map(([k, v]) => `<tr><td>${k}</td><td>${fmtQty(v)}</td></tr>`);
+                return { thead, rows: bodyRows };
+            };
+            pagers.t_manu_size = { page: 1, total: 1 };
+            reRenderTable('t_manu_size');
+
+            // Type Mix
+            tableRenderers.t_manu_type = () => {
+                const groups = groupSum(rows, 'type');
+                const thead = `<tr><th>Type</th><th>Qty (kg)</th></tr>`;
+                const bodyRows = groups.map(([k, v]) => `<tr><td>${k}</td><td>${fmtQty(v)}</td></tr>`);
+                return { thead, rows: bodyRows };
+            };
+            pagers.t_manu_type = { page: 1, total: 1 };
+            reRenderTable('t_manu_type');
+        }
+
+
+        function buildReports() {
+            // Start from the full data, then apply report filters
+            const filtered = applyReportFilters(ORDERS);
+            renderClientReport(filtered);
+            renderManuReport(filtered);
+        }
+
+        // Export CSV for reports (current filtered view)
+        function downloadReportCSV() {
+            const filtered = applyReportFilters(ORDERS);
+            const header = ['Order ID', 'Date', 'Client', 'Size', 'Type', 'Qty (kg)', 'Manufacturer', 'Delivered', 'Status', 'Sell ₹/kg', 'Cost ₹/kg', 'Revenue ₹', 'Cost ₹', 'Profit ₹', 'Pending ₹'];
+            const rows = filtered.map(r => [
+                r.orderID, r.date ? r.date.toISOString().slice(0, 10) : '', r.client, r.size, r.type, r.qty, r.manufacturer,
+                r.delivered ? 'Yes' : 'No', r.status, r.sellPrice, r.costPrice, Math.round(r.revenue), Math.round(r.cost), Math.round(r.profit), Math.round(r.pending)
+            ]);
+            rows.unshift(header);
+            const csv = rows.map(row => row.map(x => (x === undefined || x === null) ? '' : String(x).includes(',') ? `"${String(x).replace(/"/g, '""')}"` : String(x)).join(',')).join('\n');
+            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'biobags_reports.csv';
+            document.body.appendChild(a); a.click(); a.remove();
+        }
+
+
+        // ===== Reports events
+        document.getElementById('r_refresh').addEventListener('click', buildReports);
+        document.getElementById('r_download').addEventListener('click', downloadReportCSV);
+        document.getElementById('r_reset').addEventListener('click', () => {
+            document.getElementById('r_client').value = '';
+            document.getElementById('r_manu').value = '';
+            document.getElementById('r_month').value = '';
+            document.getElementById('r_search').value = '';
+            buildReports();
+        });
+        ['r_client', 'r_manu', 'r_period_type', 'r_period_value', 'r_search'].forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.addEventListener('input', buildReports);
+            el.addEventListener('change', buildReports);
+        });
+
+
+        // ===== Pagination (10 rows/page) =====
+        const PAGE_SIZE = 10;
+        const pagers = {}; // tableId -> { page, total }
+
+        function slicePage(rows, page, size = PAGE_SIZE) {
+            const start = (page - 1) * size;
+            return rows.slice(start, start + size);
+        }
+
+        function renderPager(tableId, totalRows) {
+            const totalPages = Math.max(1, Math.ceil(totalRows / PAGE_SIZE));
+            const state = pagers[tableId] || { page: 1, total: totalPages };
+            state.total = totalPages;
+            if (state.page > totalPages) state.page = totalPages;
+            if (state.page < 1) state.page = 1;
+            pagers[tableId] = state;
+
+            const host = document.getElementById('p_' + tableId);
+            if (!host) return;
+
+            host.innerHTML = '';
+            const prev = document.createElement('button');
+            prev.textContent = '‹ Prev';
+            prev.disabled = state.page <= 1;
+            prev.addEventListener('click', () => { pagers[tableId].page--; reRenderTable(tableId); });
+
+            const next = document.createElement('button');
+            next.textContent = 'Next ›';
+            next.disabled = state.page >= totalPages;
+            next.addEventListener('click', () => { pagers[tableId].page++; reRenderTable(tableId); });
+
+            const info = document.createElement('span'); info.className = 'info';
+            info.textContent = `Page ${state.page} / ${totalPages} • ${totalRows} rows`;
+
+            host.appendChild(prev);
+            host.appendChild(next);
+            host.appendChild(info);
+        }
+
+        // registry of table re-render functions
+        const tableRenderers = {}; // tableId -> function returning {thead, rows[]}
+
+        function reRenderTable(tableId) {
+            const fn = tableRenderers[tableId];
+            if (!fn) return;
+            const { thead, rows } = fn(); // fresh data under current filters
+            const tbodyEl = document.querySelector(`#${tableId} tbody`);
+            const theadEl = document.querySelector(`#${tableId} thead`);
+            theadEl.innerHTML = thead;
+
+            const page = (pagers[tableId]?.page) || 1;
+            const portion = slicePage(rows, page);
+            tbodyEl.innerHTML = portion.join('') || `<tr><td class="muted" colspan="99" style="text-align:center">No data</td></tr>`;
+
+            renderPager(tableId, rows.length);
+        }
+
+
+        function renderSharedOrders(filteredRows) {
+            tableRenderers.t_orders_shared = () => {
+                const thead = `<tr>
+      <th>Order ID</th><th>Date</th><th>Client</th><th>Size</th><th>Type</th><th>Qty (kg)</th>
+      <th>Manufacturer</th><th>Delivered</th><th>Status</th>
+      <th>Sell ₹/kg</th><th>Cost ₹/kg</th><th>Revenue</th><th>Cost</th><th>Profit</th><th>Pending</th>
+    </tr>`;
+
+                const rows = filteredRows.map(r => `<tr>
+      <td>${(r.orderID || '')}</td>
+      <td>${r.date ? r.date.toISOString().slice(0, 10) : ''}</td>
+      <td>${(r.client || '')}</td>
+      <td>${(r.size || '')}</td>
+      <td>${(r.type || '')}</td>
+      <td>${fmtQty(r.qty)}</td>
+      <td>${(r.manufacturer || '')}</td>
+      <td>${r.delivered ? '<span class="chip ok">Yes</span>' : '<span class="chip warn">No</span>'}</td>
+      <td>${(r.status || '')}</td>
+      <td>${fmtMoney(r.sellPrice)}</td>
+      <td>${fmtMoney(r.costPrice)}</td>
+      <td>${fmtMoney(r.revenue)}</td>
+      <td>${fmtMoney(r.cost)}</td>
+      <td>${fmtMoney(r.profit)}</td>
+      <td>${fmtMoney(r.pending)}</td>
+    </tr>`);
+
+                return { thead, rows };
+            };
+            // Keep page when filters change? You can reset like below:
+            pagers.t_orders_shared = { page: 1, total: 1 };
+            reRenderTable('t_orders_shared');
+        }
+
+
+        function buildReports() {
+            const filtered = applyReportFilters(ORDERS);
+
+            // Client side tables
+            renderClientReport(filtered);
+
+            // Manufacturer side tables
+            renderManuReport(filtered);
+
+            // Shared orders table
+            renderSharedOrders(filtered);
+        }
+        ['r_client', 'r_manu', 'r_period_type', 'r_period_value', 'r_search'].forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.addEventListener('input', buildReports);
+            el.addEventListener('change', buildReports);
+        });
+
+
+        // ===== Period helpers (Month / Quarter / Half-Year / Year) =====
+        function startOfMonth(d) { return new Date(d.getFullYear(), d.getMonth(), 1); }
+        function endOfMonth(d) { return new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999); }
+
+        function startOfQuarter(d) {
+            const qStart = d.getMonth() - (d.getMonth() % 3);
+            return new Date(d.getFullYear(), qStart, 1);
+        }
+        function endOfQuarter(d) {
+            const s = startOfQuarter(d);
+            return new Date(s.getFullYear(), s.getMonth() + 3, 0, 23, 59, 59, 999);
+        }
+
+        function startOfHalf(d) {
+            const hStart = (d.getMonth() < 6) ? 0 : 6;
+            return new Date(d.getFullYear(), hStart, 1);
+        }
+        function endOfHalf(d) {
+            const s = startOfHalf(d);
+            return new Date(s.getFullYear(), s.getMonth() + 6, 0, 23, 59, 59, 999);
+        }
+
+        function startOfYear(d) { return new Date(d.getFullYear(), 0, 1); }
+        function endOfYear(d) { return new Date(d.getFullYear(), 11, 31, 23, 59, 59, 999); }
+
+        function formatLabelFor(type, d) {
+            if (type === 'month') return d.toLocaleString(undefined, { month: 'long', year: 'numeric' });
+            if (type === 'quarter') return `Q${Math.floor(d.getMonth() / 3) + 1} ${d.getFullYear()}`;
+            if (type === 'half') return `${d.getMonth() < 6 ? 'H1' : 'H2'} ${d.getFullYear()}`;
+            return String(d.getFullYear()); // year
+        }
+
+        function canonicalValueFor(type, d) {
+            const y = d.getFullYear();
+            if (type === 'month') return `${y}-${String(d.getMonth() + 1).padStart(2, '0')}`; // YYYY-MM
+            if (type === 'quarter') return `${y}-Q${Math.floor(d.getMonth() / 3) + 1}`;          // YYYY-Q#
+            if (type === 'half') return `${y}-H${d.getMonth() < 6 ? 1 : 2}`;                // YYYY-H#
+            return String(y);                                                                  // YYYY
+        }
+
+        function parseCanonical(type, val) {
+            if (!val) return null;
+            try {
+                if (type === 'month') {
+                    const [y, m] = val.split('-'); return new Date(+y, +m - 1, 1);
+                }
+                if (type === 'quarter') {
+                    const [y, q] = val.split('-Q'); return new Date(+y, ((+q - 1) * 3), 1);
+                }
+                if (type === 'half') {
+                    const [y, h] = val.split('-H'); return new Date(+y, (+h === 1 ? 0 : 6), 1);
+                }
+                return new Date(+val, 0, 1); // year
+            } catch { return null; }
+        }
+
+        function addPeriod(type, d, delta) {
+            if (type === 'month') return new Date(d.getFullYear(), d.getMonth() + delta, 1);
+            if (type === 'quarter') return new Date(d.getFullYear(), d.getMonth() + 3 * delta, 1);
+            if (type === 'half') return new Date(d.getFullYear(), d.getMonth() + 6 * delta, 1);
+            return new Date(d.getFullYear() + delta, 0, 1); // year
+        }
+
+        function periodStartEnd(type, val) {
+            const anchor = parseCanonical(type, val);
+            if (!anchor) return [null, null];
+            if (type === 'month') return [startOfMonth(anchor), endOfMonth(anchor)];
+            if (type === 'quarter') return [startOfQuarter(anchor), endOfQuarter(anchor)];
+            if (type === 'half') return [startOfHalf(anchor), endOfHalf(anchor)];
+            return [startOfYear(anchor), endOfYear(anchor)];
+        }
+
+        // ===== Period picker controller =====
+        function setPeriodValue(type, dateObj, fire = true) {
+            const $val = document.getElementById('r_period_value');
+            const $lab = document.getElementById('mp_label');
+            $val.value = canonicalValueFor(type, dateObj);
+            $lab.textContent = formatLabelFor(type, dateObj);
+            if (fire) {
+                $val.dispatchEvent(new Event('input', { bubbles: true }));
+                $val.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        }
+
+        function initPeriodPicker() {
+            const $type = document.getElementById('r_period_type');
+            const $prev = document.getElementById('mp_prev');
+            const $next = document.getElementById('mp_next');
+
+            let curType = $type.value;
+            let cur = new Date(); // default to current period
+            cur = (curType === 'month') ? startOfMonth(cur)
+                : (curType === 'quarter') ? startOfQuarter(cur)
+                    : (curType === 'half') ? startOfHalf(cur)
+                        : startOfYear(cur);
+
+            setPeriodValue(curType, cur, false);
+
+            $type.addEventListener('change', () => {
+                curType = $type.value;
+                // snap anchor to the start of the chosen period of "today"
+                let now = new Date();
+                cur = (curType === 'month') ? startOfMonth(now)
+                    : (curType === 'quarter') ? startOfQuarter(now)
+                        : (curType === 'half') ? startOfHalf(now)
+                            : startOfYear(now);
+                setPeriodValue(curType, cur);  // triggers buildReports via existing listeners
+            });
+
+            $prev.addEventListener('click', () => {
+                cur = addPeriod(curType, cur, -1);
+                setPeriodValue(curType, cur);
+            });
+            $next.addEventListener('click', () => {
+                cur = addPeriod(curType, cur, +1);
+                setPeriodValue(curType, cur);
+            });
+        }
+
+        // Label to show in the big chip
+        function formatPeriodLabel(type, value) {
+            if (type === 'all') return 'All time';
+            if (type === 'month') {
+                const [y, m] = value.split('-').map(Number);
+                const d = new Date(y, m - 1, 1);
+                return d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+            }
+            if (type === 'quarter') {
+                const [y, q] = value.split('-Q').map(Number);
+                return `Q${q} ${y}`;
+            }
+            if (type === 'half') {
+                const [y, h] = value.split('-H').map(Number);
+                return `H${h} ${y}`;
+            }
+            if (type === 'year') {
+                return value; // "2025"
+            }
+            return '—';
+        }
+
+        // Date bounds for filtering
+        function getPeriodBounds(type, value) {
+            if (type === 'all') return [null, null];
+
+            if (type === 'month') {
+                const [y, m] = value.split('-').map(Number);
+                const start = new Date(y, m - 1, 1);
+                const end = new Date(y, m, 0);
+                end.setHours(23, 59, 59, 999);
+                return [start, end];
+            }
+            if (type === 'quarter') {
+                const [y, q] = value.split('-Q').map(Number);
+                const startMonth = (q - 1) * 3;
+                const start = new Date(y, startMonth, 1);
+                const end = new Date(y, startMonth + 3, 0);
+                end.setHours(23, 59, 59, 999);
+                return [start, end];
+            }
+            if (type === 'half') {
+                const [y, h] = value.split('-H').map(Number);
+                const startMonth = (h === 1 ? 0 : 6);
+                const start = new Date(y, startMonth, 1);
+                const end = new Date(y, startMonth + 6, 0);
+                end.setHours(23, 59, 59, 999);
+                return [start, end];
+            }
+            if (type === 'year') {
+                const y = Number(value);
+                const start = new Date(y, 0, 1);
+                const end = new Date(y, 12, 0);
+                end.setHours(23, 59, 59, 999);
+                return [start, end];
+            }
+            return [null, null];
+        }
+
+        // Step backward/forward when clicking ‹ ›
+        // Return the next period "value" string for the current type
+        function stepPeriod(type, value, dir /* -1 or +1 */) {
+            if (type === 'all') return value; // no-op
+
+            if (type === 'month') {
+                let [y, m] = value.split('-').map(Number);
+                m += dir;
+                if (m < 1) { m = 12; y -= 1; }
+                if (m > 12) { m = 1; y += 1; }
+                return `${y}-${String(m).padStart(2, '0')}`;
+            }
+            if (type === 'quarter') {
+                let [y, q] = value.split('-Q').map(Number);
+                q += dir;
+                if (q < 1) { q = 4; y -= 1; }
+                if (q > 4) { q = 1; y += 1; }
+                return `${y}-Q${q}`;
+            }
+            if (type === 'half') {
+                let [y, h] = value.split('-H').map(Number);
+                h += dir;
+                if (h < 1) { h = 2; y -= 1; }
+                if (h > 2) { h = 1; y += 1; }
+                return `${y}-H${h}`;
+            }
+            if (type === 'year') {
+                const y = Number(value) + dir;
+                return String(y);
+            }
+            return value;
+        }
+
+        function refreshPeriodUI() {
+            const type = document.getElementById('r_period_type').value;
+            const value = document.getElementById('r_period_value').value;
+
+            // Label
+            document.getElementById('mp_label').textContent = formatPeriodLabel(type, value);
+
+            // Disable arrows for "All time"
+            const disable = (type === 'all');
+            document.getElementById('mp_prev').disabled = disable;
+            document.getElementById('mp_next').disabled = disable;
+        }
+
+        // Handlers (keep yours; just ensure they call refresh + rebuild)
+        document.getElementById('r_period_type').addEventListener('change', () => {
+            const sel = document.getElementById('r_period_type').value;
+            const now = new Date();
+            // set a sensible default "value" when switching types
+            if (sel === 'all') {
+                document.getElementById('r_period_value').value = 'all';
+            } else if (sel === 'month') {
+                document.getElementById('r_period_value').value =
+                    `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            } else if (sel === 'quarter') {
+                const q = Math.floor(now.getMonth() / 3) + 1;
+                document.getElementById('r_period_value').value = `${now.getFullYear()}-Q${q}`;
+            } else if (sel === 'half') {
+                const h = now.getMonth() < 6 ? 1 : 2;
+                document.getElementById('r_period_value').value = `${now.getFullYear()}-H${h}`;
+            } else if (sel === 'year') {
+                document.getElementById('r_period_value').value = String(now.getFullYear());
+            }
+            refreshPeriodUI();
+            buildReports();
+        });
+
+        document.getElementById('mp_prev').addEventListener('click', () => {
+            const type = r_period_type.value;
+            const value = r_period_value.value;
+            r_period_value.value = stepPeriod(type, value, -1);
+            refreshPeriodUI();
+            buildReports();
+        });
+
+        document.getElementById('mp_next').addEventListener('click', () => {
+            const type = r_period_type.value;
+            const value = r_period_value.value;
+            r_period_value.value = stepPeriod(type, value, +1);
+            refreshPeriodUI();
+            buildReports();
+        });
+
     </script>
 </body>
 
