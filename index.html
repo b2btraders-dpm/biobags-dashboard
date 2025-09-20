@@ -82,7 +82,7 @@
         }
 
         .cards {
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr))
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr))
         }
 
         .panel {
@@ -165,9 +165,22 @@
             border: 1px solid var(--ring)
         }
 
+        .btn.logout {
+            background: #ff5353;
+            border: 1px solid var(--ring)
+        }
+
+        /* Active tab button */
+        .btn.active {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: #fff;
+            border: none;
+        }
+
+
         /* KPIs */
         .kpi .v {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 800;
             margin: 6px 0
         }
@@ -399,6 +412,7 @@
                 font-size: 13px;
                 padding: 8px;
             }
+
             .title-buttons {
                 flex-direction: row !important;
             }
@@ -436,9 +450,11 @@
         .controls .span-2 {
             grid-column: span 2;
         }
+
         .title-buttons {
-                flex-direction: row !important;
-            }
+            flex-direction: row !important;
+        }
+
         @media (max-width: 920px) {
             .controls .span-2 {
                 grid-column: span 1;
@@ -489,17 +505,85 @@
             background: #0b1326;
             border-radius: 10px;
         }
+
+        /* --- Auth screen --- */
+        .auth-wrap {
+            min-height: 100dvh;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+        }
+
+        .auth-card {
+            width: 100%;
+            max-width: 380px;
+            padding: 20px;
+            background: linear-gradient(180deg, rgba(15, 22, 44, .95), rgba(15, 22, 44, .88));
+            border: 1px solid rgba(255, 255, 255, .06);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .auth-card h2 {
+            margin: 0 0 12px;
+            font-size: 19px;
+            letter-spacing: .2px;
+        }
+
+        .auth-row {
+            margin: 10px 0;
+        }
+
+        .auth-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .auth-error {
+            display: none;
+            margin-top: 8px;
+            font-size: 13px;
+            color: #fff;
+            background: rgba(255, 71, 87, .12);
+            border: 1px solid rgba(255, 71, 87, .45);
+            padding: 8px 10px;
+            border-radius: 10px;
+        }
     </style>
 </head>
 
 <body>
-    <div class="wrap">
+    <!-- Auth Gate -->
+    <div id="authScreen" class="auth-wrap">
+        <div class="auth-card">
+            <h2>🔐 Sign in to B2B Traders | Biobags</h2>
+            <div class="auth-row">
+                <label>Username</label>
+                <input id="authUser" type="text" placeholder="Username" />
+            </div>
+            <div class="auth-row">
+                <label>Password</label>
+                <input id="authPass" type="password" placeholder="Password" />
+            </div>
+            <div class="auth-actions">
+                <button class="btn" id="authLogin">Login</button>
+                <button class="btn ghost" id="authClear">Clear</button>
+            </div>
+            <div id="authError" class="auth-error">Invalid credentials. Try again.</div>
+        </div>
+    </div>
+
+    <!-- Hide the app until authenticated -->
+    <div class="wrap" id="appRoot" style="display:none">
+
         <!-- Tabs -->
         <div class="title-buttons" style="grid-template-columns: 1fr auto; align-items:center; margin-bottom:12px">
-            <h1>Biobags Insight  Dashboard</h1>
+            <h1>Biobags Insight Dashboard</h1>
             <div style="display:flex; gap:8px">
                 <button class="btn ghost" id="tabDashboard">Dashboard</button>
                 <button class="btn ghost" id="tabReports">Reports</button>
+                <button class="btn ghost logout" id="btnLogout" title="Logout">Logout</button>
             </div>
         </div>
         <div id="dashboard">
@@ -568,12 +652,12 @@
                 <div class="panel pad kpi">
                     <div class="title">📦 Orders</div>
                     <div class="v" id="k_orders">-</div>
-                    <div class="subl">count</div>
+                    <div class="subl">Count</div>
                 </div>
                 <div class="panel pad kpi">
                     <div class="title">⚖️ Quantity</div>
                     <div class="v" id="k_qty">-</div>
-                    <div class="subl">kg</div>
+                    <div class="subl">Kg</div>
                 </div>
                 <div class="panel pad kpi">
                     <div class="title">💰 Revenue</div>
@@ -588,23 +672,48 @@
                 <div class="panel pad kpi">
                     <div class="title">📈 Profit</div>
                     <div class="v" id="k_profit">-</div>
-                    <div class="subl">₹ total</div>
+                    <div class="subl">₹ Total</div>
                 </div>
                 <div class="panel pad kpi">
                     <div class="title">📊 Avg Price</div>
                     <div class="v" id="k_avgsp">-</div>
-                    <div class="subl">₹/kg (sell | cost | margin%)</div>
+                    <div class="subl">₹/Kg (Sell | Cost | Margin%)</div>
                 </div>
                 <div class="panel pad kpi">
                     <div class="title">⏳ Credit</div>
                     <div class="v" id="k_pending">-</div>
-                    <div class="subl">₹ receivables</div>
+                    <div class="subl">₹ Receivables</div>
                 </div>
                 <div class="panel pad kpi">
                     <div class="title">🧾 Open vs Closed</div>
                     <div class="v"><span id="k_open">-</span> / <span id="k_closed">-</span></div>
-                    <div class="subl">open / closed</div>
+                    <div class="subl">Open / Closed</div>
                 </div>
+                <!-- NEW: Need to Pay split by Paid (Yes | Not Yet) -->
+                <div class="panel pad kpi">
+                    <div class="title">🧾 Need to Pay</div>
+                    <div class="v" id="k_needpay_split">-</div>
+                    <div class="subl">Paid | Not Paid</div>
+                </div>
+
+                <!-- NEW: Profit split (Kavin | Vicky) -->
+                <div class="panel pad kpi">
+                    <div class="title">🤝 Profit Split</div>
+                    <div class="v" id="k_profit_split">-</div>
+                    <div class="subl">Kavin | Vicky</div>
+                </div>
+                <div class="panel pad kpi">
+                    <div class="title">💹 Investments</div>
+                    <div class="v" id="k_investments">-</div>
+                    <div class="subl">Kavin | Vicky</div>
+                </div>
+                <!-- NEW: Stereo Cost (sum under current dashboard filters) -->
+                <div class="panel pad kpi">
+                    <div class="title">🎛️ Stereo Cost</div>
+                    <div class="v" id="k_stereo">-</div>
+                    <div class="subl">Sum in ₹</div>
+                </div>
+
             </div>
 
             <!-- Time summary table -->
@@ -630,7 +739,6 @@
                     <div class="title">📈 Profit Over Time</div>
                     <div class="chart-wrap"><canvas id="c_profit"></canvas></div>
                 </div>
-                
             </div>
 
             <!-- Core distributions -->
@@ -844,7 +952,8 @@
             <div class="panel" style="margin-top:16px">
                 <div class="pad">
                     <div class="title">🏭 Manufacturer Deep Dive</div>
-                    <div class="muted">Shows summary, mixes, top clients, and all orders for the selected manufacturer
+                    <div class="muted">Shows summary, mixes, top clients, and all orders for the selected
+                        manufacturer
                         (or All).</div>
                 </div>
                 <div style="border-top:1px solid var(--ring)">
@@ -930,6 +1039,8 @@
         const GID_ORDERS = '1523346431';
         const GID_CLIENTS = '1503466344';
         const GID_MANU = '159599109';
+        const GID_INVEST = '489952150';
+        const GID_STEREO = '1224383230';
         const URL = gid => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
 
         // Orders headers (normalize once to be robust)
@@ -938,7 +1049,11 @@
         const HM = { manu: 'Manufacturer', size: 'Size', type: 'Type', cost: 'Cost Price (₹/kg)' };
 
         // ====== State ======
-        let ORDERS = []; let CLIENTS = []; let MANU = [];
+        let ORDERS = [];
+        let CLIENTS = [];
+        let MANU = [];
+        let INVEST = [];
+        let STEREO = [];
         const charts = {};
 
         // ====== Utils ======
@@ -967,7 +1082,7 @@
 
         async function loadAll() {
             show('loading', true); setError(null);
-            const [o, c, m] = await Promise.all([fetchCSV(GID_ORDERS), fetchCSV(GID_CLIENTS), fetchCSV(GID_MANU)]);
+            const [o, c, m, i, s] = await Promise.all([fetchCSV(GID_ORDERS), fetchCSV(GID_CLIENTS), fetchCSV(GID_MANU), fetchCSV(GID_INVEST), fetchCSV(GID_STEREO)]);
             const pO = Papa.parse(o, { header: true });
             ORDERS = pO.data.filter(r => r[H.date]).map(r => {
                 const d = parseDate(r[H.date]); const qty = toNum(r[H.qty]); const sp = toNum(r[H.sellPrice]); const cp = toNum(r[H.costPrice]);
@@ -994,6 +1109,28 @@
             MANU = pM.data.filter(r => (r[HM.manu] || '').trim()).map(r => ({
                 manu: (r[HM.manu] || '').trim(), size: (r[HM.size] || '').trim(), type: (r[HM.type] || '').trim(), cost: toNum(r[HM.cost])
             }));
+
+            const pI = Papa.parse(i, { header: true });
+            INVEST = pI.data
+                .filter(r => (r['Name'] || '').trim())
+                .map(r => ({
+                    date: parseDate(r['Date']),
+                    name: (r['Name'] || '').trim(),
+                    amount: toNum(r['Amount'])
+                }));
+
+            const pS = Papa.parse(s, { header: true });
+            STEREO = pS.data
+                .filter(r => r['Client'] || r['Date'] || r['Cost']) // keep valid-ish rows
+                .map(r => ({
+                    date: parseDate(r['Date']),
+                    client: (r['Client'] || '').trim(),
+                    manufacturer: (r['Manufacturer'] || '').trim(),
+                    type: (r['Type'] || '').trim(),
+                    size: (r['Size'] || '').trim(),
+                    cost: toNum(r['Cost'])
+                }))
+                .filter(r => r.date && r.client);
 
             // Focus client dropdown
             const sel = document.getElementById('focusClient');
@@ -1098,6 +1235,62 @@
                 pending = rows.reduce((s, r) => s + r.pending, 0),
                 open = rows.filter(r => (r.status || '').toLowerCase() === 'open').length,
                 closed = rows.filter(r => (r.status || '').toLowerCase() === 'closed').length;
+            // --- NEW: Need to Pay split by Paid status ---
+            const paidStr = s => (s || '').toString().trim().toLowerCase();
+
+            // Paid = "Yes"
+            const needPayPaidYes = rows
+                .filter(r => paidStr(r.paid).startsWith('y')) // handles "Yes" / "yes"
+                .reduce((s, r) => s + (r.needToPay || 0), 0);
+
+            // Paid = "Not Yet"
+            const needPayPaidNotYet = rows
+                .filter(r => /^not\s*yet$/i.test((r.paid || '').toString().trim())) // exact "Not Yet"
+                .reduce((s, r) => s + (r.needToPay || 0), 0);
+
+            // Render to single card as "₹X | ₹Y"
+            document.getElementById('k_needpay_split').textContent =
+                `${fmtMoney(needPayPaidYes)} | ${fmtMoney(needPayPaidNotYet)}`;
+
+
+            // --- NEW: Profit split (Kavin | Vicky) ---
+            // Split the *total profit* equally
+            const kavinShare = profit / 2;
+            const vickyShare = profit / 2;
+
+            // Render as "₹A | ₹B"
+            document.getElementById('k_profit_split').textContent =
+                `${fmtMoney(kavinShare)} | ${fmtMoney(vickyShare)}`;
+
+            // --- NEW: Investments (Kavin | Vicky) ---
+            let investKavin = 0, investVicky = 0;
+            for (const r of INVEST) {
+                if (r.name.toLowerCase() === 'kavin') investKavin += r.amount;
+                if (r.name.toLowerCase() === 'vicky') investVicky += r.amount;
+            }
+
+            document.getElementById('k_investments').textContent =
+                `${fmtMoney(investKavin)} | ${fmtMoney(investVicky)}`;
+
+            // --- NEW: Stereo Cost (respects Dashboard filters: Focus Client + Start/End Date) ---
+            (() => {
+                const fc = document.getElementById('focusClient').value;
+                const sd = document.getElementById('startDate').value ? new Date(document.getElementById('startDate').value) : null;
+                const ed = document.getElementById('endDate').value ? new Date(document.getElementById('endDate').value) : null;
+
+                // Filter STEREO using client/date. (Status/Delivered don’t exist for Stereo sheet.)
+                const filteredStereo = STEREO.filter(r => {
+                    if (!r.date) return false;
+                    if (sd && r.date < sd) return false;
+                    if (ed && r.date > ed) return false;
+                    if (fc && r.client !== fc) return false;
+                    return true;
+                });
+
+                const stereoSum = filteredStereo.reduce((s, r) => s + (r.cost || 0), 0);
+                document.getElementById('k_stereo').textContent = fmtMoney(stereoSum);
+            })();
+
             const avgSell = qty ? (rev / qty) : 0; const avgCost = qty ? (cost / qty) : 0; const marginPct = avgSell ? ((avgSell - avgCost) / avgSell * 100) : 0;
             document.getElementById('k_orders').textContent = INR.format(orders);
             document.getElementById('k_qty').textContent = fmtQty(qty);
@@ -1381,8 +1574,15 @@
                 $reps.style.display = 'none';
             }
             // optional: visual state on buttons
-            document.getElementById('tabDashboard').classList.toggle('ghost', which !== 'dashboard');
-            document.getElementById('tabReports').classList.toggle('ghost', which !== 'reports');
+            // highlight active tab
+            document.getElementById('tabDashboard').classList.remove('active');
+            document.getElementById('tabReports').classList.remove('active');
+
+            if (which === 'dashboard') {
+                document.getElementById('tabDashboard').classList.add('active');
+            } else {
+                document.getElementById('tabReports').classList.add('active');
+            }
         }
         document.getElementById('tabDashboard').addEventListener('click', () => showTab('dashboard'));
         document.getElementById('tabReports').addEventListener('click', () => {
@@ -1391,6 +1591,7 @@
             buildReports();
         });
 
+        document.getElementById('tabDashboard').classList.add('active');
 
         function applyReportFilters(rows) {
             const fc = document.getElementById('r_client').value;
@@ -1984,6 +2185,86 @@
             refreshPeriodUI();
             buildReports();
         });
+
+        // ===== Auth (very basic, front-end only) =====
+        // Hardcoded creds:
+        const AUTH_USER = 'admin';
+        const AUTH_PASS = '817';
+
+        function showApp() {
+            document.getElementById('authScreen').style.display = 'none';
+            document.getElementById('appRoot').style.display = 'block';
+        }
+
+        function showLogin() {
+            document.getElementById('appRoot').style.display = 'none';
+            document.getElementById('authScreen').style.display = 'grid';
+        }
+
+        function isAuthed() {
+            return sessionStorage.getItem('bb_auth') === '1';
+        }
+
+        function doLogin() {
+            const u = (document.getElementById('authUser').value || '').trim();
+            const p = (document.getElementById('authPass').value || '').trim();
+            const err = document.getElementById('authError');
+
+            if (u === AUTH_USER && p === AUTH_PASS) {
+                sessionStorage.setItem('bb_auth', '1');
+                err.style.display = 'none';
+                showApp();
+                // kick off data load (if not already loaded)
+                if (ORDERS.length === 0) {
+                    (async () => { try { await loadAll(); refresh(); } catch (e) { setError('Load error: ' + e.message); } })();
+                } else {
+                    refresh();
+                }
+            } else {
+                err.style.display = 'block';
+            }
+        }
+
+        function doLogout() {
+            sessionStorage.removeItem('bb_auth');
+            showLogin();
+            // Optional: clear sensitive UI state
+            // location.reload(); // uncomment if you prefer a hard reset
+        }
+
+        // Wire up buttons
+        document.addEventListener('DOMContentLoaded', () => {
+            const $login = document.getElementById('authLogin');
+            const $clear = document.getElementById('authClear');
+            const $logout = document.getElementById('btnLogout');
+            const $user = document.getElementById('authUser');
+            const $pass = document.getElementById('authPass');
+
+            if ($login) $login.addEventListener('click', doLogin);
+            if ($clear) $clear.addEventListener('click', () => {
+                document.getElementById('authUser').value = '';
+                document.getElementById('authPass').value = '';
+                document.getElementById('authError').style.display = 'none';
+                $user?.focus();
+            });
+            if ($logout) $logout.addEventListener('click', doLogout);
+
+            // Enter-to-submit
+            [$user, $pass].forEach(el => {
+                el?.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') doLogin();
+                });
+            });
+
+            // Boot: show login or app
+            if (isAuthed()) {
+                showApp();
+                // if app loads before data, your existing IIFE will still run fetch
+            } else {
+                showLogin();
+            }
+        });
+
 
     </script>
 </body>
